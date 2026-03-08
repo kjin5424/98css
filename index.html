@@ -3,13 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>jQuery</title>
     <script src="https://code.jquery.com/jquery-4.0.0.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/98.css" />
   </head>
   <body>
+<div>
+// 타이틀
+<div class="title">jQuery 연습</div>
+// 사이드바
+<div class="sidebar">
+<ol>
+<li id="syntax-view">SYNTAX</li>
+<li id="selector-view">SELECTOR</li>
+<li id="event-view">EVENT</li>
+<li id="ajax-view">AJAX</li>
+</ol>
+</div>
+// 본문
+<div class="content" id="main-content"></div>
+</div>
     <script>
-      $(function () {});
+      $(function () {
+$("#syntax-view").click(function(){
+$("#main-content").html(<import src="syntax-index.html"/>)
+});
+});
+$("#selector-view").click(function(){
+$("#main-content").html(<import src="selector-index.html"/>)
+});
+});
+$("#event-view").click(function(){
+$("#main-content").html(<import src="event-index.html"/>)
+});
+});
+$("#ajax-view").click(function(){
+$("#main-content").html(<import src="ajax-index.html"/>)
+});
+});
     </script>
   </body>
 </html>
