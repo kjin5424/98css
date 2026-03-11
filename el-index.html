@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>EL / JSTL</title>
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="assets/styles/learn.css" />
+  </head>
+  <body class="is-page">
+    <div id="app">
+
+      <div class="sidebar">
+        <div class="sidebar-title">🏷️ EL / JSTL</div>
+        <ol class="topic-list">
+          <li class="topic-item active" data-id="1">EL 기본</li>
+          <li class="topic-item" data-id="2">JSTL Core</li>
+          <li class="topic-item" data-id="3">JSTL fmt</li>
+          <li class="topic-item" data-id="4">JSTL fn 함수</li>
+        </ol>
+      </div>
+
+      <div class="main-area">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="explain">📖 설명</button>
+          <button class="tab-btn" data-tab="practice">⌨️ 실습</button>
+        </div>
+        <div class="tab-pane active" id="explain-pane">
+          <div class="content-body" id="explain-body"></div>
+        </div>
+        <div class="tab-pane" id="practice-pane">
+          <div class="practice-area">
+            <div class="editor-label">📝 코드 확인 (서버 실행 불가 — 예상 결과를 오른쪽에서 확인)</div>
+            <textarea class="code-editor" id="code-editor" spellcheck="false"></textarea>
+            <div class="btn-row">
+              <button id="btn-preview">👁 예상 결과 보기</button>
+              <button id="btn-reset">↺ 초기화</button>
+              <span class="hint-text">EL/JSTL은 Tomcat 같은 서버에서 실행됩니다</span>
+            </div>
+            <div class="output-wrap">
+              <div class="output-label">예상 렌더링 결과 (시뮬레이션)</div>
+              <iframe class="output-frame" id="output-frame" sandbox="allow-scripts"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <script>
+      const TOPICS = [
+        {
+          id: 1,
+          label: 'EL 기본',
+          content: '<h3>EL (Expression Language)이란?</h3>' +
+            '<p>JSP에서 값을 간결하게 출력하기 위한 표현식 언어입니다. <b>${ 표현식 }</b> 형식을 사용합니다.</p>' +
+            '<div class="warn-box">⚠️ EL은 서버(Tomcat 등)에서만 처리됩니다. 브라우저에서 직접 열면 <code>${...}</code>가 그대로 표시됩니다.</div>' +
+            '<h3>기본 문법</h3>' +
+            '<pre class="code">${변수명}\n${객체.속성}\n${객체["속성"]}\n${배열[0]}\n${맵["키"]}\n\n&lt;!-- 예시 --&gt;\n이름: ${user.name}\n나이: ${user.age}\n주소: ${user.address.city}\n첫 번째: ${list[0]}\n맵 값: ${map["key"]}</pre>' +
+            '<h3>EL 연산자</h3>' +
+            '<pre class="code">&lt;!-- 산술 --&gt;\n${10 + 3}    &lt;!-- 13 --&gt;\n${10 mod 3}  &lt;!-- 1, % 도 가능 --&gt;\n${10 div 3}  &lt;!-- 3, / 도 가능 --&gt;\n\n&lt;!-- 비교 --&gt;\n${score gt 80}   &lt;!-- &gt;  --&gt;\n${score ge 80}   &lt;!-- &gt;= --&gt;\n${score lt 80}   &lt;!-- &lt;  --&gt;\n${score le 80}   &lt;!-- &lt;= --&gt;\n${score eq 80}   &lt;!-- == --&gt;\n${score ne 80}   &lt;!-- != --&gt;\n\n&lt;!-- 논리 --&gt;\n${a and b}   &lt;!-- &amp;&amp; --&gt;\n${a or b}    &lt;!-- || --&gt;\n${not a}     &lt;!-- !  --&gt;\n\n&lt;!-- 조건 --&gt;\n${score >= 80 ? "합격" : "불합격"}</pre>' +
+            '<h3>EL 내장 객체</h3>' +
+            '<table class="ref">' +
+            '<tr><th>내장 객체</th><th>설명</th><th>예시</th></tr>' +
+            '<tr><td>param</td><td>요청 파라미터</td><td>${param.name}</td></tr>' +
+            '<tr><td>requestScope</td><td>request 속성</td><td>${requestScope.user}</td></tr>' +
+            '<tr><td>sessionScope</td><td>session 속성</td><td>${sessionScope.loginId}</td></tr>' +
+            '<tr><td>applicationScope</td><td>application 속성</td><td>${applicationScope.count}</td></tr>' +
+            '<tr><td>cookie</td><td>쿠키 값</td><td>${cookie.JSESSIONID.value}</td></tr>' +
+            '<tr><td>header</td><td>요청 헤더</td><td>${header["User-Agent"]}</td></tr>' +
+            '</table>',
+          code: '<%-- EL 기본 예제 (서버 실행 필요) --%>\n<%@ page contentType="text/html; charset=UTF-8" %>\n\n<%-- 컨트롤러에서 설정한 값 예시 --%>\n<%-- request.setAttribute("name", "홍길동"); --%>\n<%-- request.setAttribute("score", 92); --%>\n<%-- session.setAttribute("loginId", "gildong"); --%>\n\n<!DOCTYPE html>\n<html>\n<head><title>EL 예제</title></head>\n<body>\n  <p>이름: ${name}</p>\n  <p>점수: ${score}</p>\n  <p>결과: ${score >= 80 ? "합격" : "불합격"}</p>\n  <p>계산: ${score + 8}</p>\n  <p>로그인: ${sessionScope.loginId}</p>\n  <p>파라미터: ${param.id}</p>\n</body>\n</html>',
+          preview: '<div style="font-family:Arial;padding:10px;">' +
+            '<p>이름: <b>홍길동</b></p>' +
+            '<p>점수: <b>92</b></p>' +
+            '<p>결과: <b style="color:green">합격</b></p>' +
+            '<p>계산: <b>100</b></p>' +
+            '<p>로그인: <b>gildong</b></p>' +
+            '<p>파라미터: <b>123</b></p>' +
+            '<hr><p style="color:#666;font-size:11px;">↑ 서버에서 EL 표현식이 처리된 결과입니다.</p></div>'
+        },
+        {
+          id: 2,
+          label: 'JSTL Core',
+          content: '<h3>JSTL Core 태그 라이브러리</h3>' +
+            '<pre class="code">&lt;%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %&gt;</pre>' +
+            '<h3>변수 선언 & 출력</h3>' +
+            '<pre class="code">&lt;!-- 변수 선언 --&gt;\n&lt;c:set var="name" value="홍길동" /&gt;\n&lt;c:set var="score" value="${90}" /&gt;\n&lt;c:set var="user" value="${requestScope.user}" /&gt;\n\n&lt;!-- 출력 (XSS 방어: escapeXml="true" 기본값) --&gt;\n&lt;c:out value="${name}" default="없음" /&gt;\n&lt;c:out value="${desc}" escapeXml="false" /&gt;\n\n&lt;!-- 변수 제거 --&gt;\n&lt;c:remove var="name" scope="request" /&gt;</pre>' +
+            '<h3>조건문</h3>' +
+            '<pre class="code">&lt;!-- if --&gt;\n&lt;c:if test="${score >= 80}"&gt;\n  &lt;p&gt;우수 학생입니다.&lt;/p&gt;\n&lt;/c:if&gt;\n\n&lt;!-- choose (if-else if-else) --&gt;\n&lt;c:choose&gt;\n  &lt;c:when test="${score >= 90}"&gt;A등급&lt;/c:when&gt;\n  &lt;c:when test="${score >= 80}"&gt;B등급&lt;/c:when&gt;\n  &lt;c:when test="${score >= 70}"&gt;C등급&lt;/c:when&gt;\n  &lt;c:otherwise&gt;F등급&lt;/c:otherwise&gt;\n&lt;/c:choose&gt;</pre>' +
+            '<h3>반복문</h3>' +
+            '<pre class="code">&lt;!-- forEach - 컬렉션 순회 --&gt;\n&lt;c:forEach var="item" items="${list}" varStatus="st"&gt;\n  ${st.index}번째: ${item.name} / ${item.price}원\n  (첫번째: ${st.first}, 마지막: ${st.last})\n&lt;/c:forEach&gt;\n\n&lt;!-- forEach - 범위 --&gt;\n&lt;c:forEach var="i" begin="1" end="10" step="2"&gt;\n  ${i}\n&lt;/c:forEach&gt;\n\n&lt;!-- forTokens - 구분자로 분리 --&gt;\n&lt;c:forTokens var="token" items="A,B,C,D" delims=","&gt;\n  ${token}\n&lt;/c:forTokens&gt;</pre>',
+          code: '<%@ page contentType="text/html; charset=UTF-8" %>\n<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>\n\n<%-- 데이터 설정 (보통 컨트롤러에서 설정) --%>\n<c:set var="score" value="85" />\n<c:set var="name" value="홍길동" />\n\n<!DOCTYPE html>\n<html>\n<head><title>JSTL Core</title></head>\n<body>\n  <h2><c:out value="${name}" />의 성적표</h2>\n\n  <%-- 조건 --%>\n  <c:choose>\n    <c:when test="${score >= 90}">A등급 (최우수)</c:when>\n    <c:when test="${score >= 80}">B등급 (우수)</c:when>\n    <c:when test="${score >= 70}">C등급 (보통)</c:when>\n    <c:otherwise>F등급 (미흡)</c:otherwise>\n  </c:choose>\n\n  <%-- 반복 --%>\n  <ul>\n    <c:forEach var="subject" items="국어,영어,수학,과학" delims=",">\n      <li>${subject}</li>\n    </c:forEach>\n  </ul>\n\n  <%-- 숫자 범위 --%>\n  <c:forEach var="i" begin="1" end="5">\n    ${i}\n  </c:forEach>\n</body>\n</html>',
+          preview: '<div style="font-family:Arial;padding:10px;">' +
+            '<h2 style="font-size:15px;">홍길동의 성적표</h2>' +
+            '<p><b style="color:blue">B등급 (우수)</b></p>' +
+            '<ul><li>국어</li><li>영어</li><li>수학</li><li>과학</li></ul>' +
+            '<p>1 2 3 4 5</p>' +
+            '<hr><p style="color:#666;font-size:11px;">↑ c:choose, c:forEach 처리 결과</p></div>'
+        },
+        {
+          id: 3,
+          label: 'JSTL fmt',
+          content: '<h3>fmt 태그 — 포맷팅 & 국제화</h3>' +
+            '<pre class="code">&lt;%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %&gt;</pre>' +
+            '<h3>숫자 포맷</h3>' +
+            '<pre class="code">&lt;!-- 숫자 포맷 --&gt;\n&lt;fmt:formatNumber value="${price}" pattern="#,##0" /&gt;\n&lt;!-- 예: 1234567 → 1,234,567 --&gt;\n\n&lt;fmt:formatNumber value="${price}" pattern="#,##0원" /&gt;\n&lt;!-- 예: 1234567 → 1,234,567원 --&gt;\n\n&lt;fmt:formatNumber value="${rate}" type="percent" /&gt;\n&lt;!-- 예: 0.756 → 76% --&gt;\n\n&lt;fmt:formatNumber value="${pi}" maxFractionDigits="2" /&gt;\n&lt;!-- 예: 3.14159 → 3.14 --&gt;</pre>' +
+            '<h3>날짜 포맷</h3>' +
+            '<pre class="code">&lt;!-- 날짜 포맷 (java.util.Date 객체) --&gt;\n&lt;fmt:formatDate value="${now}" pattern="yyyy-MM-dd" /&gt;\n&lt;fmt:formatDate value="${now}" pattern="yyyy년 MM월 dd일 HH:mm" /&gt;\n\n&lt;!-- 타임존 설정 --&gt;\n&lt;fmt:setTimeZone value="Asia/Seoul" /&gt;\n\n&lt;!-- 날짜 파싱 --&gt;\n&lt;fmt:parseDate value="2025-12-25" pattern="yyyy-MM-dd"\n              var="xmasDate" /&gt;</pre>' +
+            '<h3>국제화 (i18n)</h3>' +
+            '<pre class="code">&lt;!-- 로케일 설정 --&gt;\n&lt;fmt:setLocale value="ko_KR" /&gt;\n\n&lt;!-- 리소스 번들 로드 --&gt;\n&lt;fmt:setBundle basename="messages" /&gt;\n\n&lt;!-- 메시지 출력 --&gt;\n&lt;fmt:message key="greeting" /&gt;\n&lt;fmt:message key="welcome"&gt;\n  &lt;fmt:param value="${userName}" /&gt;\n&lt;/fmt:message&gt;</pre>',
+          code: '<%@ page contentType="text/html; charset=UTF-8" %>\n<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>\n<%@ page import="java.util.Date" %>\n\n<%\n  request.setAttribute("price", 1234567);\n  request.setAttribute("rate", 0.756);\n  request.setAttribute("now", new Date());\n  request.setAttribute("pi", 3.14159265);\n%>\n\n<!DOCTYPE html>\n<html>\n<body>\n  <h3>숫자 포맷</h3>\n  <p>가격: <fmt:formatNumber value="${price}" pattern="#,##0원" /></p>\n  <p>비율: <fmt:formatNumber value="${rate}" type="percent" /></p>\n  <p>원주율: <fmt:formatNumber value="${pi}" maxFractionDigits="3" /></p>\n\n  <h3>날짜 포맷</h3>\n  <p>오늘: <fmt:formatDate value="${now}" pattern="yyyy-MM-dd (E)" /></p>\n  <p>시각: <fmt:formatDate value="${now}" pattern="HH:mm:ss" /></p>\n</body>\n</html>',
+          preview: '<div style="font-family:Arial;padding:10px;">' +
+            '<h3 style="font-size:13px;border-bottom:1px solid #ccc;">숫자 포맷</h3>' +
+            '<p>가격: <b>1,234,567원</b></p>' +
+            '<p>비율: <b>76%</b></p>' +
+            '<p>원주율: <b>3.142</b></p>' +
+            '<h3 style="font-size:13px;border-bottom:1px solid #ccc;margin-top:8px;">날짜 포맷</h3>' +
+            '<p>오늘: <b>2026-03-11 (수)</b></p>' +
+            '<p>시각: <b>10:30:00</b></p>' +
+            '<hr><p style="color:#666;font-size:11px;">↑ fmt 태그 처리 결과 (서버 기준)</p></div>'
+        },
+        {
+          id: 4,
+          label: 'JSTL fn 함수',
+          content: '<h3>fn 함수 — 문자열 처리</h3>' +
+            '<pre class="code">&lt;%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %&gt;</pre>' +
+            '<table class="ref">' +
+            '<tr><th>함수</th><th>설명</th><th>예시 결과</th></tr>' +
+            '<tr><td>fn:length(obj)</td><td>길이 / 컬렉션 크기</td><td>${fn:length("hello")} → 5</td></tr>' +
+            '<tr><td>fn:toUpperCase(s)</td><td>대문자 변환</td><td>${fn:toUpperCase("abc")} → ABC</td></tr>' +
+            '<tr><td>fn:toLowerCase(s)</td><td>소문자 변환</td><td>${fn:toLowerCase("ABC")} → abc</td></tr>' +
+            '<tr><td>fn:trim(s)</td><td>앞뒤 공백 제거</td><td>${fn:trim(" hi ")} → hi</td></tr>' +
+            '<tr><td>fn:contains(s, sub)</td><td>포함 여부 (대소문자 구분)</td><td>${fn:contains("hello","ell")} → true</td></tr>' +
+            '<tr><td>fn:containsIgnoreCase(s,sub)</td><td>포함 여부 (대소문자 무시)</td><td>true</td></tr>' +
+            '<tr><td>fn:startsWith(s, pre)</td><td>시작 문자 확인</td><td>${fn:startsWith(url,"http")} → true</td></tr>' +
+            '<tr><td>fn:endsWith(s, suf)</td><td>끝 문자 확인</td><td>${fn:endsWith(file,".jpg")} → true</td></tr>' +
+            '<tr><td>fn:indexOf(s, sub)</td><td>위치 인덱스</td><td>${fn:indexOf("hello","ll")} → 2</td></tr>' +
+            '<tr><td>fn:replace(s, f, t)</td><td>치환</td><td>${fn:replace("a-b","a","X")} → X-b</td></tr>' +
+            '<tr><td>fn:substring(s, b, e)</td><td>부분 문자열</td><td>${fn:substring("hello",1,3)} → el</td></tr>' +
+            '<tr><td>fn:split(s, delim)</td><td>분리 → 배열</td><td>${fn:split("a,b,c",",")}</td></tr>' +
+            '<tr><td>fn:join(arr, sep)</td><td>배열 → 문자열</td><td>${fn:join(arr,"-")}</td></tr>' +
+            '<tr><td>fn:escapeXml(s)</td><td>HTML 엔티티 변환</td><td>&amp;lt; &amp;gt; &amp;amp;</td></tr>' +
+            '</table>',
+          code: '<%@ page contentType="text/html; charset=UTF-8" %>\n<%@ taglib prefix="c"  uri="http://java.sun.com/jsp/jstl/core" %>\n<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>\n\n<c:set var="msg" value="Hello, Spring World!" />\n<c:set var="tags" value="java,spring,jsp,jstl" />\n\n<!DOCTYPE html>\n<html>\n<body>\n  <p>원본: ${msg}</p>\n  <p>길이: ${fn:length(msg)}</p>\n  <p>대문자: ${fn:toUpperCase(msg)}</p>\n  <p>"Spring" 포함? ${fn:contains(msg, "Spring")}</p>\n  <p>"Hello"로 시작? ${fn:startsWith(msg, "Hello")}</p>\n  <p>앞 5글자: ${fn:substring(msg, 0, 5)}</p>\n  <p>치환: ${fn:replace(msg, "Spring", "jQuery")}</p>\n\n  <p>태그 분리:</p>\n  <ul>\n    <c:forEach var="tag" items="${fn:split(tags, \',\')}">\n      <li>${fn:trim(tag)}</li>\n    </c:forEach>\n  </ul>\n</body>\n</html>',
+          preview: '<div style="font-family:Arial;padding:10px;">' +
+            '<p>원본: Hello, Spring World!</p>' +
+            '<p>길이: <b>20</b></p>' +
+            '<p>대문자: <b>HELLO, SPRING WORLD!</b></p>' +
+            '<p>"Spring" 포함? <b>true</b></p>' +
+            '<p>"Hello"로 시작? <b>true</b></p>' +
+            '<p>앞 5글자: <b>Hello</b></p>' +
+            '<p>치환: <b>Hello, jQuery World!</b></p>' +
+            '<p>태그 분리:</p><ul><li>java</li><li>spring</li><li>jsp</li><li>jstl</li></ul>' +
+            '<hr><p style="color:#666;font-size:11px;">↑ fn 함수 처리 결과</p></div>'
+        }
+      ];
+
+      let currentId = 1;
+
+      function loadTopic(id) {
+        const t = TOPICS.find(x => x.id === id);
+        if (!t) return;
+        currentId = id;
+        document.getElementById('explain-body').innerHTML = t.content;
+        document.getElementById('code-editor').value = t.code;
+      }
+
+      function showPreview() {
+        const t = TOPICS.find(x => x.id === currentId);
+        document.getElementById('output-frame').srcdoc =
+          '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+          '<style>body{font-family:Arial,sans-serif;font-size:12px;margin:0;}</style></head>' +
+          '<body>' + (t.preview || '<p style="padding:10px;color:#666">미리보기 없음</p>') + '</body></html>';
+      }
+
+      loadTopic(1);
+
+      document.querySelectorAll('.topic-item').forEach(li => {
+        li.addEventListener('click', () => {
+          document.querySelectorAll('.topic-item').forEach(x => x.classList.remove('active'));
+          li.classList.add('active');
+          loadTopic(parseInt(li.dataset.id));
+        });
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab + '-pane').classList.add('active');
+        });
+      });
+
+      document.getElementById('btn-preview').addEventListener('click', showPreview);
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        document.getElementById('code-editor').value =
+          TOPICS.find(x => x.id === currentId).code;
+      });
+    </script>
+  </body>
+</html>

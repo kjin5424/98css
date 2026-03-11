@@ -2,50 +2,221 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>jQuery</title>
-    <script src="https://code.jquery.com/jquery-4.0.0.js"></script>
+    <title>웹 개발 학습 센터</title>
     <link rel="stylesheet" href="https://unpkg.com/98.css" />
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        background-color: #008484;
-      }
-    </style>
+    <link rel="stylesheet" href="assets/styles/learn.css" />
   </head>
-  <body>
-    <div>
-      <!-- 타이틀 -->
-      <div class="title">jQuery 연습</div>
-      <!-- 사이드바 -->
-      <div class="sidebar">
-        <ul>
-          <li id="syntax-view">SYNTAX</li>
-          <li id="selector-view">SELECTOR</li>
-          <li id="event-view">EVENT</li>
-          <li id="ajax-view">AJAX</li>
-        </ul>
-      </div>
-      <!-- 본문 -->
-      <div class="content" id="main-content"></div>
+  <body class="is-desktop">
+
+    <div id="desktop">
+      <div id="icon-grid"></div>
     </div>
+
+    <div id="taskbar">
+      <button id="start-btn" class="btn">🪟 시작</button>
+      <div class="tb-sep"></div>
+      <div id="taskbar-wins"></div>
+      <div id="clock"></div>
+    </div>
+
     <script>
-      $(function () {
-        $("#syntax-view").click(function () {
-          $("#main-content").load("syntax-index.html");
+      const CATS = [
+        { id: 'js',     label: 'JavaScript', icon: '📜', file: 'js-index.html' },
+        { id: 'jquery', label: 'jQuery',      icon: '💠', file: 'jquery-index.html' },
+        { id: 'ajax',   label: 'AJAX',        icon: '🔄', file: 'ajax-index.html' },
+        { id: 'el',     label: 'EL / JSTL',   icon: '🏷️', file: 'el-index.html' },
+        { id: 'jsp',    label: 'JSP',          icon: '☕', file: 'jsp-index.html' },
+        { id: 'jstree', label: 'jsTree',       icon: '🌳', file: 'jstree-index.html' },
+        { id: 'jqgrid', label: 'jqGrid',       icon: '📊', file: 'jqgrid-index.html' },
+      ];
+
+      let zTop = 100;
+      const openWins = new Map();
+
+      /* ===== WINDOW OPEN / CLOSE ===== */
+
+      function openWindow(cat) {
+        if (openWins.has(cat.id)) {
+          const w = openWins.get(cat.id);
+          if (w.style.display === 'none') w.style.display = 'block';
+          focusWin(w);
+          return;
+        }
+        const win = buildWin(cat);
+        document.getElementById('desktop').appendChild(win);
+        openWins.set(cat.id, win);
+
+        const n = openWins.size;
+        win.style.left = Math.min((n - 1) * 30 + 40, window.innerWidth - 520) + 'px';
+        win.style.top  = Math.min((n - 1) * 24 + 20, window.innerHeight - 420) + 'px';
+        win.style.display = 'block';
+
+        makeDraggable(win);
+        focusWin(win);
+        addTaskbarBtn(cat, win);
+        document.querySelectorAll('.desktop-icon[data-id="' + cat.id + '"]')
+          .forEach(ic => ic.classList.add('open'));
+      }
+
+      function buildWin(cat) {
+        const div = document.createElement('div');
+        div.className = 'win';
+        div.dataset.catId = cat.id;
+        div.innerHTML =
+          '<div class="window">' +
+            '<div class="title-bar">' +
+              '<div class="title-bar-text">' + cat.icon + ' ' + cat.label + '</div>' +
+              '<div class="title-bar-controls">' +
+                '<button aria-label="Minimize"></button>' +
+                '<button aria-label="Maximize"></button>' +
+                '<button aria-label="Close"></button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="window-body">' +
+              '<iframe src="' + cat.file + '" title="' + cat.label + '"></iframe>' +
+            '</div>' +
+          '</div>';
+
+        const [minBtn, maxBtn, closeBtn] = div.querySelectorAll('.title-bar-controls button');
+        minBtn.addEventListener('click', () => minimizeWin(cat.id));
+        maxBtn.addEventListener('click', () => maximizeWin(div));
+        closeBtn.addEventListener('click', () => closeWin(cat.id));
+
+        div.addEventListener('mousedown', () => focusWin(div));
+        return div;
+      }
+
+      function closeWin(id) {
+        const win = openWins.get(id);
+        if (!win) return;
+        win.remove();
+        openWins.delete(id);
+        const tb = document.querySelector('.tb-btn[data-cat="' + id + '"]');
+        if (tb) tb.remove();
+        document.querySelectorAll('.desktop-icon[data-id="' + id + '"]')
+          .forEach(ic => ic.classList.remove('open'));
+      }
+
+      function minimizeWin(id) {
+        const win = openWins.get(id);
+        if (win) win.style.display = 'none';
+        document.querySelectorAll('.tb-btn[data-cat="' + id + '"]')
+          .forEach(b => b.classList.remove('active'));
+      }
+
+      function maximizeWin(win) {
+        const dh = document.getElementById('desktop').offsetHeight;
+        if (win._max) {
+          win.style.left = win._ml; win.style.top  = win._mt;
+          win.style.width = win._mw; win.style.height = win._mh;
+          win._max = false;
+        } else {
+          win._ml = win.style.left; win._mt = win.style.top;
+          win._mw = win.style.width; win._mh = win.style.height;
+          win.style.left = '0'; win.style.top = '0';
+          win.style.width = '100%'; win.style.height = dh + 'px';
+          win._max = true;
+        }
+      }
+
+      function focusWin(win) {
+        win.style.zIndex = ++zTop;
+        document.querySelectorAll('.win .title-bar').forEach(tb => tb.classList.remove('active'));
+        win.querySelector('.title-bar').classList.add('active');
+        document.querySelectorAll('.tb-btn').forEach(b => b.classList.remove('active'));
+        const tb = document.querySelector('.tb-btn[data-cat="' + win.dataset.catId + '"]');
+        if (tb) tb.classList.add('active');
+      }
+
+      function addTaskbarBtn(cat, win) {
+        const btn = document.createElement('button');
+        btn.className = 'btn tb-btn active';
+        btn.dataset.cat = cat.id;
+        btn.textContent = cat.icon + ' ' + cat.label;
+        btn.addEventListener('click', () => {
+          if (win.style.display === 'none') {
+            win.style.display = 'block';
+            focusWin(win);
+          } else if (btn.classList.contains('active')) {
+            minimizeWin(cat.id);
+          } else {
+            focusWin(win);
+          }
         });
-        $("#selector-view").click(function () {
-          $("#main-content").load("selector-index.html");
+        document.getElementById('taskbar-wins').appendChild(btn);
+      }
+
+      /* ===== DRAG ===== */
+
+      function makeDraggable(win) {
+        const titleBar = win.querySelector('.title-bar');
+        const iframe   = win.querySelector('iframe');
+        let dragging = false, sx, sy, sl, st;
+
+        titleBar.addEventListener('mousedown', e => {
+          if (e.target.tagName === 'BUTTON') return;
+          dragging = true;
+          sx = e.clientX; sy = e.clientY;
+          sl = win.offsetLeft; st = win.offsetTop;
+          iframe.style.pointerEvents = 'none';
+          e.preventDefault();
         });
-        $("#event-view").click(function () {
-          $("#main-content").load("event-index.html");
+        document.addEventListener('mousemove', e => {
+          if (!dragging) return;
+          const dh = document.getElementById('desktop').offsetHeight;
+          let nx = Math.max(0, Math.min(sl + e.clientX - sx, window.innerWidth - 100));
+          let ny = Math.max(0, Math.min(st + e.clientY - sy, dh - 30));
+          win.style.left = nx + 'px';
+          win.style.top  = ny + 'px';
         });
-        $("#ajax-view").click(function () {
-          $("#main-content").load("ajax-index.html");
+        document.addEventListener('mouseup', () => {
+          if (dragging) { dragging = false; iframe.style.pointerEvents = ''; }
         });
+      }
+
+      /* ===== CLOCK ===== */
+
+      function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').textContent =
+          String(now.getHours()).padStart(2, '0') + ':' +
+          String(now.getMinutes()).padStart(2, '0');
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      /* ===== DESKTOP ICONS ===== */
+
+      const iconGrid = document.getElementById('icon-grid');
+      CATS.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'desktop-icon';
+        div.dataset.id = cat.id;
+        div.innerHTML =
+          '<span class="di-icon">' + cat.icon + '</span>' +
+          '<span class="di-label">' + cat.label + '</span>';
+
+        let timer = null;
+        div.addEventListener('click', () => {
+          document.querySelectorAll('.desktop-icon').forEach(ic => ic.classList.remove('selected'));
+          div.classList.add('selected');
+          if (timer) {
+            clearTimeout(timer); timer = null;
+            openWindow(cat);
+          } else {
+            timer = setTimeout(() => { timer = null; }, 350);
+          }
+        });
+        div.addEventListener('dblclick', () => {
+          if (timer) { clearTimeout(timer); timer = null; }
+          openWindow(cat);
+        });
+        iconGrid.appendChild(div);
+      });
+
+      document.getElementById('desktop').addEventListener('click', e => {
+        if (!e.target.closest('.desktop-icon'))
+          document.querySelectorAll('.desktop-icon').forEach(ic => ic.classList.remove('selected'));
       });
     </script>
   </body>

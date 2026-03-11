@@ -2,28 +2,183 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>jQuery-ajax</title>
-    <script src="https://code.jquery.com/jquery-4.0.0.js"></script>
+    <title>AJAX</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="assets/styles/learn.css" />
   </head>
-  <body>
-    <div>
-      <!-- 타이틀 -->
-      <div class="title">ajax 연습</div>
-      <!-- 사이드바 -->
+  <body class="is-page">
+    <div id="app">
+
       <div class="sidebar">
-        <ol>
-          <li id="1">ajax</li>
-          <li id="2">fetch</li>
-          <li id="3">async-fetch</li>
+        <div class="sidebar-title">🔄 AJAX</div>
+        <ol class="topic-list">
+          <li class="topic-item active" data-id="1">$.ajax()</li>
+          <li class="topic-item" data-id="2">$.get / $.post</li>
+          <li class="topic-item" data-id="3">fetch API</li>
         </ol>
       </div>
-      <!-- 본문 -->
-      <div class="content" id="main-content"></div>
+
+      <div class="main-area">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="explain">📖 설명</button>
+          <button class="tab-btn" data-tab="practice">⌨️ 실습</button>
+        </div>
+        <div class="tab-pane active" id="explain-pane">
+          <div class="content-body" id="explain-body"></div>
+        </div>
+        <div class="tab-pane" id="practice-pane">
+          <div class="practice-area">
+            <div class="editor-label">📝 코드 에디터 (실제 API 호출 가능 — JSONPlaceholder)</div>
+            <textarea class="code-editor" id="code-editor" spellcheck="false"></textarea>
+            <div class="btn-row">
+              <button id="btn-run">▶ 실행</button>
+              <button id="btn-reset">↺ 초기화</button>
+              <button id="btn-clear">🗑 지우기</button>
+              <span class="hint-text">jQuery 및 fetch 모두 사용 가능합니다</span>
+            </div>
+            <div class="output-wrap">
+              <div class="output-label">실행 결과</div>
+              <iframe class="output-frame" id="output-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
     <script>
-      $(function () {});
+      const COMMON_HEAD =
+        '<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>' +
+        '<style>body{font-family:Arial,sans-serif;font-size:12px;margin:8px;}' +
+        '.log{border-bottom:1px solid #eee;padding:2px 4px;font-family:monospace;font-size:11px;}' +
+        '.err{padding:3px 6px;background:#fee;color:red;font-family:monospace;font-size:11px;border-left:3px solid red;margin:2px 0;}' +
+        'button{padding:4px 10px;margin:3px;cursor:pointer;}' +
+        '#output{border:1px solid #ccc;padding:8px;margin-top:8px;min-height:60px;background:#f9f9f9;line-height:1.5;}</style>';
+
+      const TOPICS = [
+        {
+          id: 1,
+          label: '$.ajax()',
+          content: '<h3>AJAX란?</h3>' +
+            '<p>페이지 새로고침 없이 서버와 데이터를 교환하는 기술입니다. <b>A</b>synchronous <b>J</b>avaScript <b>A</b>nd <b>X</b>ML의 약자이나 현재는 JSON을 주로 사용합니다.</p>' +
+            '<h3>$.ajax() 기본</h3>' +
+            '<pre class="code">$.ajax({\n  url:      "/api/users",   // 요청 URL\n  type:     "GET",          // HTTP 메서드\n  dataType: "json",         // 응답 형식\n  data:     { id: 1 },      // 전송 데이터\n  success: function(data) {\n    console.log("성공:", data);\n  },\n  error: function(xhr, status, error) {\n    console.log("오류:", status, error);\n  },\n  complete: function() {\n    console.log("완료 (성공/실패 무관)");\n  }\n});</pre>' +
+            '<h3>Promise 방식 (체이닝)</h3>' +
+            '<pre class="code">$.ajax({ url: "/api/data", type: "GET" })\n  .done(data  => console.log("성공", data))\n  .fail((xhr, s) => console.log("실패", s))\n  .always(()  => console.log("완료"));</pre>' +
+            '<h3>주요 옵션</h3>' +
+            '<table class="ref">' +
+            '<tr><th>옵션</th><th>설명</th><th>값 예시</th></tr>' +
+            '<tr><td>url</td><td>요청 주소</td><td>"/api/data"</td></tr>' +
+            '<tr><td>type/method</td><td>HTTP 메서드</td><td>"GET","POST","PUT","DELETE"</td></tr>' +
+            '<tr><td>dataType</td><td>응답 형식</td><td>"json","text","html","xml"</td></tr>' +
+            '<tr><td>contentType</td><td>요청 Content-Type</td><td>"application/json"</td></tr>' +
+            '<tr><td>data</td><td>전송 데이터</td><td>객체 또는 문자열</td></tr>' +
+            '<tr><td>timeout</td><td>제한 시간(ms)</td><td>5000</td></tr>' +
+            '<tr><td>beforeSend</td><td>전송 직전 콜백</td><td>function(xhr){...}</td></tr>' +
+            '</table>' +
+            '<div class="warn-box">⚠️ <b>CORS:</b> 다른 도메인 요청 시 서버에서 Access-Control-Allow-Origin 헤더를 허용해야 합니다.</div>',
+          code: '// $.ajax() 실습 — JSONPlaceholder API 사용\n\nfunction showLoading() {\n  $("#output").html("<span style=\'color:#666\'>⏳ 로딩 중...</span>");\n}\n\n// GET 요청\n$("#btn-get").click(function() {\n  showLoading();\n  $.ajax({\n    url: "https://jsonplaceholder.typicode.com/posts/1",\n    type: "GET",\n    dataType: "json",\n    success: function(data) {\n      $("#output").html(\n        "<b>✅ GET 성공!</b><br>" +\n        "<b>ID:</b> " + data.id + "<br>" +\n        "<b>제목:</b> " + data.title + "<br>" +\n        "<b>내용:</b> " + data.body.substring(0, 80) + "..."\n      );\n    },\n    error: function(xhr, status) {\n      $("#output").html("<span style=\'color:red\'>❌ 오류: " + status + "</span>");\n    }\n  });\n});\n\n// POST 요청\n$("#btn-post").click(function() {\n  showLoading();\n  $.ajax({\n    url: "https://jsonplaceholder.typicode.com/posts",\n    type: "POST",\n    contentType: "application/json",\n    data: JSON.stringify({ title: "새 게시글", body: "내용", userId: 1 }),\n    dataType: "json",\n    success: function(data) {\n      $("#output").html(\n        "<b>✅ POST 성공!</b><br>" +\n        "생성된 ID: <b>" + data.id + "</b><br>" +\n        JSON.stringify(data)\n      );\n    }\n  });\n});',
+          body: '<div><button id="btn-get">GET 요청</button><button id="btn-post">POST 요청</button><div id="output">버튼을 클릭하세요.</div></div>'
+        },
+        {
+          id: 2,
+          label: '$.get / $.post',
+          content: '<h3>단축 메서드</h3>' +
+            '<pre class="code">// $.get(url, data, callback)\n$.get("/api/users", { page: 1 }, function(data) {\n  console.log(data);\n});\n\n// $.post(url, data, callback)\n$.post("/api/users",\n  { name: "홍길동", age: 30 },\n  function(data) { console.log("생성됨:", data); }\n);\n\n// $.getJSON — JSON 전용\n$.getJSON("/api/items.json", function(data) {\n  data.forEach(item => console.log(item));\n});</pre>' +
+            '<h3>폼 데이터 직렬화</h3>' +
+            '<pre class="code">// serialize() — 폼 데이터를 쿼리 문자열로\nconst qs = $("form").serialize();\n// → "name=홍길동&age=30"\n\n// serializeArray() — 배열로\nconst arr = $("form").serializeArray();\n// → [{name:"name",value:"홍길동"}, ...]\n\n// POST 전송\n$.post("/api/submit", $("form").serialize(), function(res) {\n  alert("저장 완료: " + res.id);\n});</pre>' +
+            '<h3>응답 처리 패턴</h3>' +
+            '<pre class="code">// 로딩 인디케이터\n$.ajax({\n  url: "/api/data",\n  beforeSend: () => $("#spinner").show(),\n  complete:   () => $("#spinner").hide(),\n  success: data => renderData(data),\n  error: (xhr) => {\n    if (xhr.status === 401) location.href = "/login";\n    else alert("서버 오류: " + xhr.status);\n  }\n});</pre>',
+          code: '// $.get / $.post 실습\n\n// 1. $.get — 사용자 목록\n$("#btn-users").click(function() {\n  $("#output").html("⏳ 로딩 중...");\n  $.get("https://jsonplaceholder.typicode.com/users",\n    function(users) {\n      const html = "<b>사용자 목록 (상위 5명):</b><ul>" +\n        users.slice(0, 5).map(u =>\n          "<li>" + u.name + " — " + u.email + "</li>"\n        ).join("") + "</ul>";\n      $("#output").html(html);\n    }\n  );\n});\n\n// 2. $.getJSON — 특정 게시글\n$("#btn-post").click(function() {\n  $("#output").html("⏳ 로딩 중...");\n  const id = Math.floor(Math.random() * 10) + 1;\n  $.getJSON(\n    "https://jsonplaceholder.typicode.com/posts/" + id,\n    function(data) {\n      $("#output").html(\n        "<b>게시글 #" + data.id + "</b><br>" +\n        "<b>제목:</b> " + data.title\n      );\n    }\n  );\n});\n\n// 3. 댓글 목록\n$("#btn-comments").click(function() {\n  $("#output").html("⏳ 로딩 중...");\n  $.get(\n    "https://jsonplaceholder.typicode.com/comments",\n    { postId: 1, _limit: 3 },\n    function(data) {\n      const html = "<b>댓글 목록:</b><ul>" +\n        data.map(c => "<li>" + c.name + "</li>").join("") + "</ul>";\n      $("#output").html(html);\n    }\n  );\n});',
+          body: '<div><button id="btn-users">사용자 목록</button><button id="btn-post">랜덤 게시글</button><button id="btn-comments">댓글 목록</button><div id="output">버튼을 클릭하세요.</div></div>'
+        },
+        {
+          id: 3,
+          label: 'fetch API',
+          content: '<h3>fetch API (ES6+, 순수 JS)</h3>' +
+            '<pre class="code">// 기본 GET\nfetch("/api/users")\n  .then(res => res.json())   // Response → JSON\n  .then(data => console.log(data))\n  .catch(err => console.error(err));\n\n// POST (JSON 전송)\nfetch("/api/users", {\n  method: "POST",\n  headers: { "Content-Type": "application/json" },\n  body: JSON.stringify({ name: "홍길동", age: 30 })\n})\n.then(res => res.json())\n.then(data => console.log("생성:", data));</pre>' +
+            '<h3>async / await (최신 방식)</h3>' +
+            '<pre class="code">async function fetchUsers() {\n  try {\n    const res  = await fetch("/api/users");\n    if (!res.ok) throw new Error("HTTP " + res.status);\n    const data = await res.json();\n    return data;\n  } catch (err) {\n    console.error("오류:", err);\n  }\n}\n\n// 병렬 요청\nasync function fetchAll() {\n  const [users, posts] = await Promise.all([\n    fetch("/api/users").then(r => r.json()),\n    fetch("/api/posts").then(r => r.json())\n  ]);\n  console.log(users, posts);\n}</pre>' +
+            '<h3>$.ajax vs fetch 비교</h3>' +
+            '<table class="ref">' +
+            '<tr><th>항목</th><th>$.ajax</th><th>fetch</th></tr>' +
+            '<tr><td>jQuery 필요</td><td>✅ 필요</td><td>❌ 불필요</td></tr>' +
+            '<tr><td>HTTP 오류 처리</td><td>error 콜백</td><td>수동 체크 필요</td></tr>' +
+            '<tr><td>자동 JSON 파싱</td><td>✅ dataType:"json"</td><td>❌ res.json() 호출</td></tr>' +
+            '<tr><td>요청 취소</td><td>xhr.abort()</td><td>AbortController</td></tr>' +
+            '<tr><td>브라우저 지원</td><td>IE 포함</td><td>IE 미지원</td></tr>' +
+            '</table>',
+          code: '// fetch API 실습\n\nasync function showLoading() {\n  document.getElementById("output").innerHTML =\n    "<span style=\'color:#666\'>⏳ 로딩 중...</span>";\n}\n\n// 1. 기본 fetch (then/catch)\ndocument.getElementById("btn-fetch").addEventListener("click", function() {\n  showLoading();\n  fetch("https://jsonplaceholder.typicode.com/todos/1")\n    .then(res => res.json())\n    .then(data => {\n      document.getElementById("output").innerHTML =\n        "<b>✅ fetch 성공!</b><br>" +\n        "할 일: " + data.title + "<br>" +\n        "완료: " + (data.completed ? "✅" : "⬜");\n    })\n    .catch(err => {\n      document.getElementById("output").innerHTML =\n        "<span style=\'color:red\'>❌ " + err.message + "</span>";\n    });\n});\n\n// 2. async/await\ndocument.getElementById("btn-async").addEventListener("click", async function() {\n  showLoading();\n  try {\n    const res  = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=3");\n    if (!res.ok) throw new Error("HTTP " + res.status);\n    const data = await res.json();\n    document.getElementById("output").innerHTML =\n      "<b>게시글 3개 (async/await):</b><ul>" +\n      data.map(p => "<li>" + p.title + "</li>").join("") + "</ul>";\n  } catch(e) {\n    document.getElementById("output").innerHTML =\n      "<span style=\'color:red\'>오류: " + e.message + "</span>";\n  }\n});\n\n// 3. Promise.all 병렬 요청\ndocument.getElementById("btn-parallel").addEventListener("click", async function() {\n  showLoading();\n  const [user, todos] = await Promise.all([\n    fetch("https://jsonplaceholder.typicode.com/users/1").then(r => r.json()),\n    fetch("https://jsonplaceholder.typicode.com/todos?userId=1&_limit=3").then(r => r.json())\n  ]);\n  document.getElementById("output").innerHTML =\n    "<b>병렬 로드:</b><br>" +\n    "사용자: " + user.name + "<br>" +\n    "할 일 수: " + todos.length + "개<br>" +\n    "<ul>" + todos.map(t => "<li>" + t.title + "</li>").join("") + "</ul>";\n});',
+          body: '<div><button id="btn-fetch">fetch().then()</button><button id="btn-async">async/await</button><button id="btn-parallel">Promise.all 병렬</button><div id="output">버튼을 클릭하세요.</div></div>'
+        }
+      ];
+
+      let currentId = 1;
+
+      function loadTopic(id) {
+        const t = TOPICS.find(x => x.id === id);
+        if (!t) return;
+        currentId = id;
+        document.getElementById('explain-body').innerHTML = t.content;
+        document.getElementById('code-editor').value = t.code;
+      }
+
+      function buildSrcdoc(code) {
+        const t = TOPICS.find(x => x.id === currentId);
+        return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+          COMMON_HEAD +
+          '</head><body>' + (t.body || '') +
+          '<script>(function(){' +
+          'var _l=console.log;' +
+          'console.log=function(){_l.apply(console,arguments);' +
+          'var d=document.createElement("div");d.className="log";' +
+          'd.textContent=Array.from(arguments).map(function(a){return typeof a==="object"?JSON.stringify(a):String(a);}).join(" ");' +
+          'document.body.appendChild(d);};' +
+          'window.onerror=function(m,s,l){var d=document.createElement("div");d.className="err";d.textContent="오류: "+m+" (line "+l+")";document.body.appendChild(d);return true;};' +
+          '})();<\/script>' +
+          '<script>try{' + code + '}catch(e){var d=document.createElement("div");d.className="err";d.textContent="런타임 오류: "+e.message;document.body.appendChild(d);}<\/script>' +
+          '</body></html>';
+      }
+
+      loadTopic(1);
+
+      document.querySelectorAll('.topic-item').forEach(li => {
+        li.addEventListener('click', () => {
+          document.querySelectorAll('.topic-item').forEach(x => x.classList.remove('active'));
+          li.classList.add('active');
+          loadTopic(parseInt(li.dataset.id));
+        });
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab + '-pane').classList.add('active');
+        });
+      });
+
+      document.getElementById('btn-run').addEventListener('click', () => {
+        document.getElementById('output-frame').srcdoc =
+          buildSrcdoc(document.getElementById('code-editor').value);
+      });
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        document.getElementById('code-editor').value =
+          TOPICS.find(x => x.id === currentId).code;
+      });
+      document.getElementById('btn-clear').addEventListener('click', () => {
+        document.getElementById('output-frame').srcdoc = '';
+      });
+
+      document.getElementById('code-editor').addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const ta = e.target, s = ta.selectionStart;
+          ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(ta.selectionEnd);
+          ta.selectionStart = ta.selectionEnd = s + 2;
+        }
+      });
     </script>
   </body>
 </html>

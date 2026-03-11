@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>JSP</title>
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="assets/styles/learn.css" />
+  </head>
+  <body class="is-page">
+    <div id="app">
+
+      <div class="sidebar">
+        <div class="sidebar-title">☕ JSP</div>
+        <ol class="topic-list">
+          <li class="topic-item active" data-id="1">JSP 구조 & 지시자</li>
+          <li class="topic-item" data-id="2">스크립틀릿 & 표현식</li>
+          <li class="topic-item" data-id="3">내장 객체</li>
+          <li class="topic-item" data-id="4">MVC 패턴</li>
+        </ol>
+      </div>
+
+      <div class="main-area">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="explain">📖 설명</button>
+          <button class="tab-btn" data-tab="practice">⌨️ 실습</button>
+        </div>
+        <div class="tab-pane active" id="explain-pane">
+          <div class="content-body" id="explain-body"></div>
+        </div>
+        <div class="tab-pane" id="practice-pane">
+          <div class="practice-area">
+            <div class="editor-label">📝 코드 확인 (서버 실행 불가 — 예상 결과를 오른쪽에서 확인)</div>
+            <textarea class="code-editor" id="code-editor" spellcheck="false"></textarea>
+            <div class="btn-row">
+              <button id="btn-preview">👁 예상 결과 보기</button>
+              <button id="btn-reset">↺ 초기화</button>
+              <span class="hint-text">JSP는 Tomcat 서버에서 실행됩니다</span>
+            </div>
+            <div class="output-wrap">
+              <div class="output-label">예상 렌더링 결과 (시뮬레이션)</div>
+              <iframe class="output-frame" id="output-frame" sandbox="allow-scripts"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <script>
+      const TOPICS = [
+        {
+          id: 1,
+          label: 'JSP 구조 & 지시자',
+          content: '<h3>JSP란?</h3>' +
+            '<p><b>J</b>ava<b>S</b>erver <b>P</b>ages — HTML 안에 Java 코드를 삽입하여 동적 웹페이지를 만드는 서버사이드 기술입니다.</p>' +
+            '<div class="warn-box">⚠️ JSP는 Tomcat, JBoss 같은 WAS(Web Application Server)에서만 실행됩니다.</div>' +
+            '<h3>JSP 처리 과정</h3>' +
+            '<pre class="code">클라이언트 요청 (.jsp)\n  → Servlet (.java) 으로 변환  ← 처음 요청 시만\n  → 컴파일 (.class)\n  → _jspService() 실행\n  → HTML 생성 후 응답</pre>' +
+            '<h3>지시자 (Directive)</h3>' +
+            '<pre class="code">&lt;!-- page 지시자 --&gt;\n&lt;%@ page contentType="text/html; charset=UTF-8" %&gt;\n&lt;%@ page language="java" %&gt;\n&lt;%@ page import="java.util.*, java.sql.*" %&gt;\n&lt;%@ page errorPage="/error.jsp" %&gt;  &lt;!-- 오류 처리 페이지 --&gt;\n&lt;%@ page isErrorPage="true" %&gt;     &lt;!-- 오류 처리 페이지 선언 --&gt;\n&lt;%@ page session="true" %&gt;         &lt;!-- session 사용 여부 --&gt;\n\n&lt;!-- include 지시자 (컴파일 시 포함 — 정적) --&gt;\n&lt;%@ include file="/common/header.jsp" %&gt;\n\n&lt;!-- taglib 지시자 --&gt;\n&lt;%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %&gt;\n&lt;%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %&gt;</pre>' +
+            '<h3>액션 태그 (include vs forward)</h3>' +
+            '<pre class="code">&lt;!-- 동적 포함 (런타임 시 포함) --&gt;\n&lt;jsp:include page="/common/header.jsp"&gt;\n  &lt;jsp:param name="title" value="홈" /&gt;\n&lt;/jsp:include&gt;\n\n&lt;!-- 요청 전달 (브라우저 URL 변경 없음) --&gt;\n&lt;jsp:forward page="/result.jsp" /&gt;</pre>',
+          code: '<%@ page contentType="text/html; charset=UTF-8" %>\n<%@ page import="java.util.Date" %>\n<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>\n<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>\n\n<!DOCTYPE html>\n<html lang="ko">\n<head>\n  <meta charset="UTF-8">\n  <title>JSP 기본 구조</title>\n</head>\n<body>\n  <!-- 헤더 포함 -->\n  <%@ include file="/common/header.jsp" %>\n\n  <main>\n    <h1>메인 페이지</h1>\n    <p>현재 시각: <fmt:formatDate value="${now}" pattern="yyyy-MM-dd HH:mm" /></p>\n\n    <c:if test="${not empty sessionScope.loginId}">\n      <p>환영합니다, ${sessionScope.loginId}님!</p>\n    </c:if>\n  </main>\n\n  <!-- 푸터 포함 -->\n  <jsp:include page="/common/footer.jsp" />\n</body>\n</html>',
+          preview: '<div style="font-family:Arial;padding:10px;">' +
+            '<div style="background:#000080;color:white;padding:6px;">[공통 header.jsp 포함]</div>' +
+            '<main style="padding:10px;">' +
+            '<h1 style="font-size:16px;">메인 페이지</h1>' +
+            '<p>현재 시각: <b>2026-03-11 10:30</b></p>' +
+            '<p>환영합니다, <b>gildong</b>님!</p>' +
+            '</main>' +
+            '<div style="background:#333;color:white;padding:6px;">[공통 footer.jsp 포함]</div>' +
+            '<hr><p style="color:#666;font-size:11px;">↑ JSP 처리 후 렌더링 결과</p></div>'
+        },
+        {
+          id: 2,
+          label: '스크립틀릿 & 표현식',
+          content: '<h3>JSP 스크립트 요소</h3>' +
+            '<table class="ref">' +
+            '<tr><th>요소</th><th>문법</th><th>설명</th></tr>' +
+            '<tr><td>선언부</td><td>&lt;%! ... %&gt;</td><td>멤버 변수/메서드 선언</td></tr>' +
+            '<tr><td>스크립틀릿</td><td>&lt;% ... %&gt;</td><td>Java 코드 실행</td></tr>' +
+            '<tr><td>표현식</td><td>&lt;%= ... %&gt;</td><td>값을 출력 (= out.print)</td></tr>' +
+            '<tr><td>JSP 주석</td><td>&lt;%-- ... --%&gt;</td><td>클라이언트에 전송 안 됨</td></tr>' +
+            '</table>' +
+            '<h3>예시</h3>' +
+            '<pre class="code">&lt;%-- 선언부: 멤버 변수/메서드 선언 --%&gt;\n&lt;%!\n  int visitCount = 0;\n  String getGrade(int score) {\n    if (score >= 90) return "A";\n    if (score >= 80) return "B";\n    return "C";\n  }\n%&gt;\n\n&lt;%-- 스크립틀릿: Java 로직 --%&gt;\n&lt;%\n  visitCount++;\n  String name = request.getParameter("name");\n  if (name == null) name = "방문자";\n  int score = 88;\n  out.println("&lt;p&gt;방문 수: " + visitCount + "&lt;/p&gt;");\n%&gt;\n\n&lt;%-- 표현식: 값 출력 --%&gt;\n&lt;p&gt;이름: &lt;%= name %&gt;&lt;/p&gt;\n&lt;p&gt;점수: &lt;%= score %&gt;점 (등급: &lt;%= getGrade(score) %&gt;)&lt;/p&gt;</pre>' +
+            '<div class="tip-box">💡 현대 개발에서는 스크립틀릿 대신 <b>JSTL + EL</b>을 사용하는 것이 좋습니다. 스크립틀릿은 HTML과 Java가 섞여 유지보수가 어렵습니다.</div>',
+          code: '<%@ page contentType="text/html; charset=UTF-8" %>\n\n<%-- 선언부 --%>\n<%!\n  private String getGrade(int score) {\n    if (score >= 90) return "A";\n    if (score >= 80) return "B";\n    if (score >= 70) return "C";\n    return "F";\n  }\n%>\n\n<%\n  // 스크립틀릿\n  String[] names  = {"홍길동", "김철수", "이영희"};\n  int[]    scores = {92, 78, 85};\n%>\n\n<!DOCTYPE html>\n<html>\n<body>\n  <table border="1">\n    <tr><th>이름</th><th>점수</th><th>등급</th></tr>\n    <%\n      for (int i = 0; i < names.length; i++) {\n    %>\n    <tr>\n      <td><%= names[i] %></td>\n      <td><%= scores[i] %></td>\n      <td><%= getGrade(scores[i]) %></td>\n    </tr>\n    <% } %>\n  </table>\n</body>\n</html>',
+          preview: '<div style="font-family:Arial;padding:10px;">' +
+            '<table border="1" style="border-collapse:collapse;font-size:12px;">' +
+            '<tr style="background:#000080;color:white;"><th style="padding:4px 10px;">이름</th><th style="padding:4px 10px;">점수</th><th style="padding:4px 10px;">등급</th></tr>' +
+            '<tr><td style="padding:4px 10px;">홍길동</td><td style="padding:4px 10px;">92</td><td style="padding:4px 10px;">A</td></tr>' +
+            '<tr style="background:#f0f0f0;"><td style="padding:4px 10px;">김철수</td><td style="padding:4px 10px;">78</td><td style="padding:4px 10px;">C</td></tr>' +
+            '<tr><td style="padding:4px 10px;">이영희</td><td style="padding:4px 10px;">85</td><td style="padding:4px 10px;">B</td></tr>' +
+            '</table>' +
+            '<hr><p style="color:#666;font-size:11px;">↑ 스크립틀릿 + 표현식 처리 결과</p></div>'
+        },
+        {
+          id: 3,
+          label: '내장 객체',
+          content: '<h3>JSP 내장 객체 (Implicit Objects)</h3>' +
+            '<p>JSP에서 별도 선언 없이 바로 사용할 수 있는 객체들입니다.</p>' +
+            '<table class="ref">' +
+            '<tr><th>객체</th><th>타입</th><th>설명</th></tr>' +
+            '<tr><td>request</td><td>HttpServletRequest</td><td>클라이언트 요청 정보</td></tr>' +
+            '<tr><td>response</td><td>HttpServletResponse</td><td>서버 응답 설정</td></tr>' +
+            '<tr><td>session</td><td>HttpSession</td><td>세션 데이터 관리</td></tr>' +
+            '<tr><td>application</td><td>ServletContext</td><td>애플리케이션 공유 데이터</td></tr>' +
+            '<tr><td>out</td><td>JspWriter</td><td>출력 스트림</td></tr>' +
+            '<tr><td>pageContext</td><td>PageContext</td><td>모든 스코프 접근</td></tr>' +
+            '<tr><td>config</td><td>ServletConfig</td><td>서블릿 설정 정보</td></tr>' +
+            '<tr><td>exception</td><td>Throwable</td><td>isErrorPage="true"일 때만</td></tr>' +
+            '</table>' +
+            '<h3>주요 사용법</h3>' +
+            '<pre class="code">&lt;%\n  // request — 요청 처리\n  String name  = request.getParameter("name");     // 파라미터\n  String[]arr  = request.getParameterValues("ids"); // 다중값\n  String ip    = request.getRemoteAddr();           // 클라이언트 IP\n  request.setAttribute("result", myObject);        // 속성 설정\n\n  // session — 세션 관리\n  session.setAttribute("loginId", "user123");\n  String id = (String) session.getAttribute("loginId");\n  session.invalidate(); // 로그아웃\n\n  // response — 응답 제어\n  response.sendRedirect("/main.jsp");       // 리다이렉트\n  response.setHeader("Cache-Control","no-cache");\n\n  // application — 전체 공유\n  Integer cnt = (Integer) application.getAttribute("visits");\n  application.setAttribute("visits", cnt + 1);\n%&gt;</pre>' +
+            '<h3>속성 범위 (Scope)</h3>' +
+            '<table class="ref">' +
+            '<tr><th>범위</th><th>객체</th><th>생명주기</th></tr>' +
+            '<tr><td>page</td><td>pageContext</td><td>현재 JSP 페이지</td></tr>' +
+            '<tr><td>request</td><td>request</td><td>하나의 요청 처리</td></tr>' +
+            '<tr><td>session</td><td>session</td><td>세션 유지 동안</td></tr>' +
+            '<tr><td>application</td><td>application</td><td>서버 종료까지</td></tr>' +
+            '</table>',
+          code: '<%@ page contentType="text/html; charset=UTF-8" %>\n<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>\n\n<%\n  // request 처리\n  String name = request.getParameter("name");\n  if (name == null || name.isEmpty()) name = "방문자";\n\n  String clientIP  = request.getRemoteAddr();\n  String userAgent = request.getHeader("User-Agent");\n\n  // session 처리\n  Integer visitCount = (Integer) session.getAttribute("visitCount");\n  if (visitCount == null) visitCount = 0;\n  session.setAttribute("visitCount", ++visitCount);\n\n  // request 속성 설정 (EL로 접근 가능)\n  request.setAttribute("clientIP", clientIP);\n%>\n\n<!DOCTYPE html>\n<html>\n<body>\n  <h2>안녕하세요, <%= name %>님!</h2>\n  <p>IP: ${clientIP}</p>\n  <p>이번 방문은 session 내 <%= visitCount %>번째입니다.</p>\n\n  <c:if test="${not empty param.debug}">\n    <p>User-Agent: ${header["User-Agent"]}</p>\n  </c:if>\n</body>\n</html>',
+          preview: '<div style="font-family:Arial;padding:10px;">' +
+            '<h2 style="font-size:16px;">안녕하세요, 홍길동님!</h2>' +
+            '<p>IP: <b>127.0.0.1</b></p>' +
+            '<p>이번 방문은 session 내 <b>3</b>번째입니다.</p>' +
+            '<hr><p style="color:#666;font-size:11px;">↑ request / session 내장 객체 사용 결과</p></div>'
+        },
+        {
+          id: 4,
+          label: 'MVC 패턴',
+          content: '<h3>MVC (Model-View-Controller) 패턴</h3>' +
+            '<p>관심사를 분리하여 유지보수성을 높이는 아키텍처 패턴입니다.</p>' +
+            '<pre class="code">┌────────────────────────────────────────────┐\n│              클라이언트 요청                   │\n└─────────────────────┬──────────────────────┘\n                      ▼\n┌─────────────────────────────────────────────┐\n│  Controller (Servlet 또는 Spring Controller) │\n│  - 요청 파라미터 받기 (request.getParameter) │\n│  - 서비스 / DAO 호출                         │\n│  - Model 데이터를 request/session에 저장     │\n│  - View(JSP)로 forward                      │\n└─────────────────────┬───────────────────────┘\n                      ▼\n┌─────────────────────────────────────────────┐\n│  Model (VO/DTO, Service, DAO)               │\n│  - 비즈니스 로직                              │\n│  - DB 접근 (MyBatis / JPA)                  │\n└─────────────────────────────────────────────┘\n                      ▼\n┌─────────────────────────────────────────────┐\n│  View (JSP + JSTL/EL)                       │\n│  - 화면 렌더링                               │\n│  - Java 코드 없이 EL/JSTL만 사용 (권장)      │\n└─────────────────────────────────────────────┘</pre>' +
+            '<h3>Controller (Servlet)</h3>' +
+            '<pre class="code">@WebServlet("/user/list")\npublic class UserListServlet extends HttpServlet {\n  protected void doGet(HttpServletRequest req,\n                       HttpServletResponse res)\n      throws ServletException, IOException {\n\n    // 1. 파라미터 받기\n    int page = Integer.parseInt(\n      req.getParameter("page") != null\n        ? req.getParameter("page") : "1"\n    );\n\n    // 2. Service 호출 (Business Logic)\n    UserService service = new UserService();\n    List&lt;User&gt; users = service.getUsers(page);\n\n    // 3. Model → request에 저장\n    req.setAttribute("users", users);\n    req.setAttribute("page", page);\n\n    // 4. View로 forward\n    req.getRequestDispatcher("/WEB-INF/views/user/list.jsp")\n       .forward(req, res);\n  }\n}</pre>' +
+            '<h3>View (JSP)</h3>' +
+            '<pre class="code">&lt;!-- /WEB-INF/views/user/list.jsp --&gt;\n&lt;%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %&gt;\n\n&lt;table&gt;\n  &lt;c:forEach var="user" items="${users}"&gt;\n    &lt;tr&gt;\n      &lt;td&gt;${user.id}&lt;/td&gt;\n      &lt;td&gt;${user.name}&lt;/td&gt;\n    &lt;/tr&gt;\n  &lt;/c:forEach&gt;\n&lt;/table&gt;</pre>',
+          code: '// === Controller (Servlet) ===\n@WebServlet("/board/list")\npublic class BoardListServlet extends HttpServlet {\n  protected void doGet(HttpServletRequest request,\n                       HttpServletResponse response)\n      throws ServletException, IOException {\n\n    // 파라미터\n    String keyword = request.getParameter("keyword");\n    int page = Integer.parseInt(\n      Optional.ofNullable(request.getParameter("page")).orElse("1")\n    );\n\n    // Service 호출\n    BoardService service = new BoardService();\n    List<BoardVO> list = service.search(keyword, page);\n    int total = service.count(keyword);\n\n    // Model 설정\n    request.setAttribute("list",    list);\n    request.setAttribute("total",   total);\n    request.setAttribute("page",    page);\n    request.setAttribute("keyword", keyword);\n\n    // View로 forward\n    request.getRequestDispatcher("/WEB-INF/views/board/list.jsp")\n           .forward(request, response);\n  }\n}\n\n// === View (list.jsp) ===\n// <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>\n// <c:forEach var="b" items="${list}">\n//   <tr><td>${b.title}</td><td>${b.writer}</td></tr>\n// </c:forEach>',
+          preview: '<div style="font-family:Arial;padding:10px;">' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<div style="border:1px solid #ccc;padding:8px;min-width:100px;">' +
+            '<b style="color:#000080">Controller</b><br>Servlet<br><small>요청처리/포워드</small></div>' +
+            '<div style="padding:8px;align-self:center;">→</div>' +
+            '<div style="border:1px solid #ccc;padding:8px;min-width:100px;">' +
+            '<b style="color:#000080">Model</b><br>Service/DAO<br><small>비즈니스 로직</small></div>' +
+            '<div style="padding:8px;align-self:center;">→</div>' +
+            '<div style="border:1px solid #ccc;padding:8px;min-width:100px;">' +
+            '<b style="color:#000080">View</b><br>JSP + JSTL<br><small>화면 렌더링</small></div>' +
+            '</div>' +
+            '<hr><p style="color:#666;font-size:11px;">↑ MVC 패턴 구조도</p></div>'
+        }
+      ];
+
+      let currentId = 1;
+
+      function loadTopic(id) {
+        const t = TOPICS.find(x => x.id === id);
+        if (!t) return;
+        currentId = id;
+        document.getElementById('explain-body').innerHTML = t.content;
+        document.getElementById('code-editor').value = t.code;
+      }
+
+      function showPreview() {
+        const t = TOPICS.find(x => x.id === currentId);
+        document.getElementById('output-frame').srcdoc =
+          '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+          '<style>body{font-family:Arial,sans-serif;font-size:12px;margin:0;}</style></head>' +
+          '<body>' + (t.preview || '<p style="padding:10px;color:#666">미리보기 없음</p>') + '</body></html>';
+      }
+
+      loadTopic(1);
+
+      document.querySelectorAll('.topic-item').forEach(li => {
+        li.addEventListener('click', () => {
+          document.querySelectorAll('.topic-item').forEach(x => x.classList.remove('active'));
+          li.classList.add('active');
+          loadTopic(parseInt(li.dataset.id));
+        });
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab + '-pane').classList.add('active');
+        });
+      });
+
+      document.getElementById('btn-preview').addEventListener('click', showPreview);
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        document.getElementById('code-editor').value =
+          TOPICS.find(x => x.id === currentId).code;
+      });
+    </script>
+  </body>
+</html>

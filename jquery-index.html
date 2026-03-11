@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>jQuery</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="assets/styles/learn.css" />
+  </head>
+  <body class="is-page">
+    <div id="app">
+
+      <div class="sidebar">
+        <div class="sidebar-title">💠 jQuery</div>
+        <ol class="topic-list">
+          <li class="topic-item active" data-id="1">기본 & 선택자</li>
+          <li class="topic-item" data-id="2">DOM 조작</li>
+          <li class="topic-item" data-id="3">이벤트</li>
+          <li class="topic-item" data-id="4">효과 & 애니메이션</li>
+          <li class="topic-item" data-id="5">탐색 (Traversal)</li>
+        </ol>
+      </div>
+
+      <div class="main-area">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="explain">📖 설명</button>
+          <button class="tab-btn" data-tab="practice">⌨️ 실습</button>
+        </div>
+        <div class="tab-pane active" id="explain-pane">
+          <div class="content-body" id="explain-body"></div>
+        </div>
+        <div class="tab-pane" id="practice-pane">
+          <div class="practice-area">
+            <div class="editor-label">📝 코드 에디터 (jQuery 사용 가능)</div>
+            <textarea class="code-editor" id="code-editor" spellcheck="false"></textarea>
+            <div class="btn-row">
+              <button id="btn-run">▶ 실행</button>
+              <button id="btn-reset">↺ 초기화</button>
+              <button id="btn-clear">🗑 지우기</button>
+              <span class="hint-text">iframe에 jQuery 3.7이 로드됩니다</span>
+            </div>
+            <div class="output-wrap">
+              <div class="output-label">실행 결과</div>
+              <iframe class="output-frame" id="output-frame" sandbox="allow-scripts"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <script>
+      const COMMON_HEAD =
+        '<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>' +
+        '<style>body{font-family:Arial,sans-serif;font-size:12px;margin:8px;}' +
+        '.log{border-bottom:1px solid #eee;padding:2px 4px;font-family:monospace;font-size:11px;}' +
+        '.err{padding:3px 6px;background:#fee;color:red;font-family:monospace;font-size:11px;border-left:3px solid red;margin:2px 0;}</style>';
+
+      const TOPICS = [
+        {
+          id: 1,
+          label: '기본 & 선택자',
+          content: '<h3>jQuery란?</h3>' +
+            '<p>DOM 조작 · 이벤트 · AJAX · 애니메이션을 쉽게 다루는 JavaScript 라이브러리입니다.</p>' +
+            '<pre class="code">// CDN 로드\n&lt;script src="https://code.jquery.com/jquery-3.7.1.min.js"&gt;&lt;/script&gt;\n\n// 문서 준비 후 실행\n$(document).ready(function() { ... });\n$(function() { ... }); // 축약형</pre>' +
+            '<h3>선택자</h3>' +
+            '<pre class="code">// CSS 선택자와 동일\n$("#id")                 // id\n$(".class")              // class\n$("p")                   // 태그\n$("ul &gt; li")           // 직계 자식\n$("input[type=text]")    // 속성\n\n// jQuery 전용\n$("li:first")            // 첫 번째\n$("li:last")             // 마지막\n$("li:eq(2)")            // 인덱스 2\n$("li:even")             // 짝수\n$("li:odd")              // 홀수\n$("li:contains(\'검색\')")  // 텍스트 포함\n$(":visible")            // 표시된 요소\n$(":hidden")             // 숨겨진 요소</pre>',
+          code: '$(function() {\n  // 선택자 실습\n  console.log("전체 li 수:", $("li").length);\n  console.log("첫 번째 li:", $("li:first").text());\n  console.log("마지막 li:", $("li:last").text());\n  console.log("짝수 li:", $("li:even").map((i,el) => $(el).text()).get());\n\n  // 선택 및 스타일 변경\n  $("li:odd").css("background-color", "#e8f4fd");\n  $("li:eq(2)").css("font-weight", "bold");\n  $("li:contains(\'jQuery\')").css("color", "#0769ad");\n\n  // 필터\n  const texts = $("li").map((i, el) => $(el).text()).get();\n  console.log("모든 항목:", texts);\n});',
+          body: '<ul id="list"><li>JavaScript</li><li>jQuery</li><li>AJAX</li><li>JSP</li><li>Spring</li></ul>'
+        },
+        {
+          id: 2,
+          label: 'DOM 조작',
+          content: '<h3>내용 변경</h3>' +
+            '<pre class="code">$("#el").text("텍스트만");         // textContent\n$("#el").html("&lt;b&gt;HTML 포함&lt;/b&gt;"); // innerHTML\n$("input").val("입력값");         // value\n$("input").val();                 // 값 읽기</pre>' +
+            '<h3>속성 & 클래스</h3>' +
+            '<pre class="code">$("#link").attr("href", "https://...");  // 속성 설정\n$("#link").attr("href");                // 속성 읽기\n$("#el").removeAttr("disabled");\n$("div").data("key", "value");          // data-* 속성\n$("div").data("key");                   // 읽기\n\n$("p").addClass("highlight");\n$("p").removeClass("hidden");\n$("p").toggleClass("active");\n$("p").hasClass("active");  // true/false\n\n// CSS\n$("div").css("color", "red");\n$("div").css({ color: "red", fontSize: "14px" });</pre>' +
+            '<h3>추가 / 삭제</h3>' +
+            '<pre class="code">$("ul").append("&lt;li&gt;마지막에 추가&lt;/li&gt;");   // 자식 마지막\n$("ul").prepend("&lt;li&gt;처음에 추가&lt;/li&gt;");  // 자식 처음\n$("p").after("&lt;p&gt;뒤에 삽입&lt;/p&gt;");         // 형제 뒤\n$("p").before("&lt;p&gt;앞에 삽입&lt;/p&gt;");        // 형제 앞\n$("p").wrap("&lt;div class=\'wrapper\'&gt;&lt;/div&gt;"); // 감싸기\n\n$("#el").remove();   // 이벤트까지 제거\n$("#el").detach();   // 이벤트 유지하며 분리\n$("#el").empty();    // 자식만 제거</pre>',
+          code: '$(function() {\n  // 1. 텍스트/HTML 변경\n  $("#title").text("jQuery DOM 실습!");\n  $("#desc").html("<b>jQuery</b>로 <em>DOM</em>을 조작합니다.");\n\n  // 2. 속성 & 클래스\n  $("#box").css({ backgroundColor: "#4a90d9", color: "white", padding: "10px" });\n  $("#box").addClass("active").attr("data-status", "modified");\n  console.log("data-status:", $("#box").data("status"));\n\n  // 3. 추가 / 삭제\n  const fruits = ["🍎 사과", "🍌 바나나", "🍊 오렌지"];\n  fruits.forEach(f => $("ul").append("<li>" + f + "</li>"));\n\n  $("ul li:last").css("color", "red");\n\n  // 4. 버튼\n  $("#btn-remove").click(() => $("ul li:last").remove());\n  $("#btn-add").click(() => $("ul").append("<li>🍇 포도</li>"));\n});',
+          body: '<div style="padding:8px;">' +
+            '<h2 id="title" style="font-size:14px;margin-bottom:6px;">제목</h2>' +
+            '<p id="desc" style="margin-bottom:8px;">설명 영역</p>' +
+            '<div id="box" style="padding:8px;background:#eee;margin-bottom:8px;">박스</div>' +
+            '<button id="btn-add" style="margin-right:4px;padding:3px 8px;cursor:pointer;">항목 추가</button>' +
+            '<button id="btn-remove" style="padding:3px 8px;cursor:pointer;">마지막 제거</button>' +
+            '<ul style="margin-top:8px;padding-left:20px;"></ul></div>'
+        },
+        {
+          id: 3,
+          label: '이벤트',
+          content: '<h3>이벤트 등록</h3>' +
+            '<pre class="code">// .on() 권장\n$("button").on("click", function() {\n  console.log($(this).text());\n});\n\n// 단축 메서드\n$("button").click(handler);\n$("input").keyup(handler);\n$("form").submit(function(e) {\n  e.preventDefault();\n});\n\n// 한 번만 실행\n$("button").one("click", handler);\n\n// 이벤트 제거\n$("button").off("click");\n$("button").off("click", specificHandler);</pre>' +
+            '<h3>이벤트 위임</h3>' +
+            '<pre class="code">// 동적으로 추가된 요소도 이벤트 처리\n$(document).on("click", ".dynamic-item", function() {\n  $(this).fadeOut(200, function() { $(this).remove(); });\n});\n\n// 부모 요소에 위임 (성능상 더 효율적)\n$("#list").on("click", "li", function() {\n  $(this).toggleClass("selected");\n});</pre>' +
+            '<h3>이벤트 객체</h3>' +
+            '<pre class="code">$("form").on("submit", function(e) {\n  e.preventDefault();        // 기본 동작 방지\n  e.stopPropagation();       // 버블링 중단\n  console.log(e.type);       // "submit"\n  console.log(e.target);     // 이벤트 발생 요소\n  console.log(e.currentTarget); // 리스너 달린 요소\n});</pre>',
+          code: '$(function() {\n  // 1. 기본 이벤트\n  $("#btn-click").on("click", function() {\n    const n = (parseInt($(this).data("cnt") || 0)) + 1;\n    $(this).data("cnt", n).text("클릭: " + n + "번");\n  });\n\n  // 2. hover 이벤트\n  $(".hover-box").hover(\n    function() { $(this).css("background", "#ffffcc"); },\n    function() { $(this).css("background", ""); }\n  );\n\n  // 3. 이벤트 위임 - 동적 추가 항목에도 동작\n  $("#dyn-list").on("click", "li", function() {\n    $(this).fadeOut(200, function() { $(this).remove(); });\n  });\n\n  $("#btn-add-item").click(function() {\n    const li = $("<li>").text("항목 " + Date.now())\n      .css({cursor:"pointer", color:"blue"});\n    $("#dyn-list").append(li);\n  });\n\n  // 4. 키보드\n  $("#search-input").on("keyup", function(e) {\n    if (e.key === "Enter") {\n      console.log("검색:", $(this).val());\n      $(this).val("");\n    }\n  });\n});',
+          body: '<div style="padding:8px;">' +
+            '<button id="btn-click" style="padding:4px 12px;cursor:pointer;margin-bottom:8px;">클릭: 0번</button><br>' +
+            '<div class="hover-box" style="padding:8px;border:1px solid #ccc;margin-bottom:8px;display:inline-block;">마우스 올려보세요!</div><br>' +
+            '<input id="search-input" type="text" placeholder="Enter로 검색..." style="padding:3px 6px;width:180px;margin-bottom:8px;" /><br>' +
+            '<button id="btn-add-item" style="padding:3px 8px;cursor:pointer;">항목 추가</button>' +
+            '<ul id="dyn-list" style="margin-top:6px;padding-left:20px;font-size:12px;"><li style="cursor:pointer;color:blue;">클릭하면 사라져요!</li></ul>' +
+            '</div>'
+        },
+        {
+          id: 4,
+          label: '효과 & 애니메이션',
+          content: '<h3>표시 / 숨기기</h3>' +
+            '<pre class="code">$("div").show();          // 표시\n$("div").hide();          // 숨기기\n$("div").toggle();        // 토글\n\n// 속도: "slow"(600ms) / "fast"(200ms) / ms 숫자\n$("div").show(300);\n$("div").hide("slow", callback); // 완료 후 콜백</pre>' +
+            '<h3>페이드 & 슬라이드</h3>' +
+            '<pre class="code">$("div").fadeIn(400);\n$("div").fadeOut("slow");\n$("div").fadeToggle();\n$("div").fadeTo(500, 0.5); // 500ms 후 투명도 0.5\n\n$("div").slideDown();\n$("div").slideUp("fast");\n$("div").slideToggle(300);</pre>' +
+            '<h3>animate()</h3>' +
+            '<pre class="code">$("div").animate({\n  width:   "300px",\n  opacity: 0.7,\n  left:    "+=50px",  // 상대값\n  fontSize: "2em"\n}, 600, "swing", function() {\n  console.log("애니메이션 완료!");\n});\n\n// easing: "swing" (기본) / "linear"\n// .stop() : 현재 애니메이션 중단\n$("div").stop(true, true);</pre>',
+          code: '$(function() {\n  // 1. show/hide/toggle\n  $("#btn-toggle").click(() => $("#box1").toggle(300));\n\n  // 2. 페이드\n  $("#btn-fade").click(() => $("#box2").fadeToggle(400));\n\n  // 3. 슬라이드\n  $("#btn-slide").click(() => $("#box3").slideToggle(300));\n\n  // 4. animate 체이닝\n  $("#btn-anim").click(() => {\n    $("#box4")\n      .stop(true)\n      .animate({ width: "+=50px", opacity: 0.5 }, 400)\n      .animate({ width: "-=50px", opacity: 1 }, 400);\n  });\n\n  // 5. fadeTo\n  let opacity = 1;\n  $("#btn-fade-to").click(() => {\n    opacity = opacity === 1 ? 0.2 : 1;\n    $("#box1, #box2, #box3, #box4").fadeTo(500, opacity);\n  });\n});',
+          body: '<style>.box{padding:10px;margin:4px;display:inline-block;color:white;font-size:11px;}</style>' +
+            '<div style="padding:8px;">' +
+            '<div style="margin-bottom:8px;">' +
+            '<button id="btn-toggle" style="margin:2px;padding:3px 8px;cursor:pointer;">toggle()</button>' +
+            '<button id="btn-fade" style="margin:2px;padding:3px 8px;cursor:pointer;">fadeToggle()</button>' +
+            '<button id="btn-slide" style="margin:2px;padding:3px 8px;cursor:pointer;">slideToggle()</button>' +
+            '<button id="btn-anim" style="margin:2px;padding:3px 8px;cursor:pointer;">animate()</button>' +
+            '<button id="btn-fade-to" style="margin:2px;padding:3px 8px;cursor:pointer;">fadeTo()</button>' +
+            '</div>' +
+            '<div id="box1" class="box" style="background:#e74c3c;width:80px;">Box 1</div>' +
+            '<div id="box2" class="box" style="background:#2ecc71;width:80px;">Box 2</div>' +
+            '<div id="box3" class="box" style="background:#3498db;width:80px;">Box 3</div>' +
+            '<div id="box4" class="box" style="background:#9b59b6;width:80px;">Box 4</div>' +
+            '</div>'
+        },
+        {
+          id: 5,
+          label: '탐색 (Traversal)',
+          content: '<h3>DOM 탐색 메서드</h3>' +
+            '<table class="ref">' +
+            '<tr><th>메서드</th><th>설명</th></tr>' +
+            '<tr><td>.parent()</td><td>직접 부모 요소</td></tr>' +
+            '<tr><td>.parents(sel)</td><td>모든 조상 (필터 가능)</td></tr>' +
+            '<tr><td>.closest(sel)</td><td>가장 가까운 조상</td></tr>' +
+            '<tr><td>.children(sel)</td><td>직접 자식</td></tr>' +
+            '<tr><td>.find(sel)</td><td>모든 자손 검색</td></tr>' +
+            '<tr><td>.siblings(sel)</td><td>형제 요소</td></tr>' +
+            '<tr><td>.next()</td><td>다음 형제</td></tr>' +
+            '<tr><td>.prev()</td><td>이전 형제</td></tr>' +
+            '<tr><td>.first()</td><td>첫 번째</td></tr>' +
+            '<tr><td>.last()</td><td>마지막</td></tr>' +
+            '<tr><td>.eq(n)</td><td>n번째 인덱스</td></tr>' +
+            '<tr><td>.filter(sel)</td><td>필터링</td></tr>' +
+            '<tr><td>.not(sel)</td><td>제외</td></tr>' +
+            '</table>' +
+            '<pre class="code">// 체이닝 예시\n$("li.active")\n  .parent()           // ul\n  .find("li")         // 모든 li\n  .not(".active")     // active 제외\n  .css("opacity", 0.5);\n\n// closest - 이벤트 위임 시 유용\n$(document).on("click", ".btn-delete", function() {\n  $(this).closest(".item").remove();\n});</pre>',
+          code: '$(function() {\n  // 1. 부모/자식/형제 탐색\n  $("#target").css("background", "#ffffcc");\n  console.log("parent:", $("#target").parent().prop("tagName"));\n  console.log("siblings:", $("#target").siblings().length + "개");\n  console.log("prev:", $("#target").prev().text());\n  console.log("next:", $("#target").next().text());\n\n  // 2. find - 자손 검색\n  const count = $("#container").find("li").length;\n  console.log("container 안 li:", count + "개");\n  $("#container").find("li:odd").css("background", "#e8f4fd");\n\n  // 3. closest - 이벤트 위임\n  $(document).on("click", ".del-btn", function() {\n    $(this).closest("li").slideUp(200, function() { $(this).remove(); });\n  });\n\n  // 아이템 추가\n  for(let i = 1; i <= 4; i++) {\n    $("#dyn-ul").append(\n      "<li style=\'margin:3px 0;\'>" +\n      "항목 " + i +\n      " <button class=\'del-btn\' style=\'font-size:10px;cursor:pointer;\'>삭제</button>" +\n      "</li>"\n    );\n  }\n});',
+          body: '<div style="padding:8px;">' +
+            '<div id="container"><ul id="nav"><li>홈</li><li id="target">서비스</li><li>소개</li><li>문의</li></ul></div>' +
+            '<hr style="margin:8px 0;">' +
+            '<ul id="dyn-ul" style="padding-left:20px;"></ul>' +
+            '</div>'
+        }
+      ];
+
+      let currentId = 1;
+
+      function loadTopic(id) {
+        const t = TOPICS.find(x => x.id === id);
+        if (!t) return;
+        currentId = id;
+        document.getElementById('explain-body').innerHTML = t.content;
+        document.getElementById('code-editor').value = t.code;
+      }
+
+      function buildSrcdoc(code) {
+        const t = TOPICS.find(x => x.id === currentId);
+        return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+          COMMON_HEAD +
+          '</head><body>' + (t.body || '') +
+          '<script>(function(){' +
+          'var _l=console.log;' +
+          'console.log=function(){_l.apply(console,arguments);' +
+          'var d=document.createElement("div");d.className="log";' +
+          'd.textContent=Array.from(arguments).map(function(a){return typeof a==="object"?JSON.stringify(a):String(a);}).join(" ");' +
+          'document.body.appendChild(d);};' +
+          'window.onerror=function(m,s,l){var d=document.createElement("div");d.className="err";d.textContent="오류: "+m+" (line "+l+")";document.body.appendChild(d);return true;};' +
+          '})();<\/script>' +
+          '<script>try{' + code + '}catch(e){var d=document.createElement("div");d.className="err";d.textContent="런타임 오류: "+e.message;document.body.appendChild(d);}<\/script>' +
+          '</body></html>';
+      }
+
+      loadTopic(1);
+
+      document.querySelectorAll('.topic-item').forEach(li => {
+        li.addEventListener('click', () => {
+          document.querySelectorAll('.topic-item').forEach(x => x.classList.remove('active'));
+          li.classList.add('active');
+          loadTopic(parseInt(li.dataset.id));
+        });
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab + '-pane').classList.add('active');
+        });
+      });
+
+      document.getElementById('btn-run').addEventListener('click', () => {
+        document.getElementById('output-frame').srcdoc =
+          buildSrcdoc(document.getElementById('code-editor').value);
+      });
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        document.getElementById('code-editor').value =
+          TOPICS.find(x => x.id === currentId).code;
+      });
+      document.getElementById('btn-clear').addEventListener('click', () => {
+        document.getElementById('output-frame').srcdoc = '';
+      });
+
+      document.getElementById('code-editor').addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const ta = e.target, s = ta.selectionStart;
+          ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(ta.selectionEnd);
+          ta.selectionStart = ta.selectionEnd = s + 2;
+        }
+      });
+    </script>
+  </body>
+</html>
