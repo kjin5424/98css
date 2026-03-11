@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>JavaScript</title>
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="assets/styles/learn.css" />
+  </head>
+  <body class="is-page">
+    <div id="app">
+
+      <div class="sidebar">
+        <div class="sidebar-title">📜 JavaScript</div>
+        <ol class="topic-list">
+          <li class="topic-item active" data-id="1">변수와 자료형</li>
+          <li class="topic-item" data-id="2">함수</li>
+          <li class="topic-item" data-id="3">배열과 객체</li>
+          <li class="topic-item" data-id="4">DOM 조작</li>
+          <li class="topic-item" data-id="5">이벤트</li>
+        </ol>
+      </div>
+
+      <div class="main-area">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="explain">📖 설명</button>
+          <button class="tab-btn" data-tab="practice">⌨️ 실습</button>
+        </div>
+        <div class="tab-pane active" id="explain-pane">
+          <div class="content-body" id="explain-body"></div>
+        </div>
+        <div class="tab-pane" id="practice-pane">
+          <div class="practice-area">
+            <div class="editor-label">📝 코드 에디터 (Tab: 들여쓰기, ▶ 실행: 코드 실행)</div>
+            <textarea class="code-editor" id="code-editor" spellcheck="false"></textarea>
+            <div class="btn-row">
+              <button id="btn-run">▶ 실행</button>
+              <button id="btn-reset">↺ 초기화</button>
+              <button id="btn-clear">🗑 지우기</button>
+              <span class="hint-text">console.log() 결과가 아래에 표시됩니다</span>
+            </div>
+            <div class="output-wrap">
+              <div class="output-label">실행 결과</div>
+              <iframe class="output-frame" id="output-frame" sandbox="allow-scripts"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <script>
+      const TOPICS = [
+        {
+          id: 1,
+          label: '변수와 자료형',
+          content: '<h3>변수 선언</h3>' +
+            '<p>JavaScript는 동적 타입 언어입니다. <b>var</b> / <b>let</b> / <b>const</b> 세 가지 방식으로 선언합니다.</p>' +
+            '<pre class="code">var  name = "홍길동"; // 함수 스코프, 재선언 가능 (구식)\n' +
+            'let  age  = 25;       // 블록 스코프, 재할당 가능\n' +
+            'const PI  = 3.14;     // 블록 스코프, 재할당 불가\n\n' +
+            '// let 과 const 는 선언 전 사용 불가 (TDZ)\n' +
+            '// var 는 호이스팅으로 undefined 반환</pre>' +
+            '<h3>자료형 (typeof)</h3>' +
+            '<pre class="code">typeof "문자열"      // "string"\n' +
+            'typeof 42            // "number"\n' +
+            'typeof 3.14          // "number"\n' +
+            'typeof true          // "boolean"\n' +
+            'typeof undefined     // "undefined"\n' +
+            'typeof null          // "object"  ← JS 역사적 버그\n' +
+            'typeof {}            // "object"\n' +
+            'typeof []            // "object"\n' +
+            'typeof function(){}  // "function"</pre>' +
+            '<h3>타입 변환</h3>' +
+            '<pre class="code">Number("42")      // 42\n' +
+            'Number("abc")     // NaN\n' +
+            'String(100)       // "100"\n' +
+            'Boolean(0)        // false\n' +
+            'Boolean("")       // false\n' +
+            'Boolean(null)     // false\n' +
+            'Boolean(1)        // true\n\n' +
+            '// 동등 비교\n' +
+            '0 == false   // true  (느슨한 비교, 타입 변환)\n' +
+            '0 === false  // false (엄격한 비교, 타입 불일치)</pre>' +
+            '<div class="tip-box">💡 <b>Tip:</b> 되도록 <code>===</code> (엄격한 비교)를 사용하세요. <code>==</code>는 의도치 않은 동작을 유발할 수 있습니다.</div>',
+          code: '// 변수와 자료형 실습\n\nvar x = 10;\nlet y = 20;\nconst z = 30;\n\nconsole.log("x + y + z =", x + y + z);\n\n// 자료형 확인\nconst values = ["문자", 42, true, null, undefined, {}, []];\nvalues.forEach(v => {\n  console.log(v, "→ typeof:", typeof v);\n});\n\n// 타입 변환\nconsole.log("\\n--- 타입 변환 ---");\nconsole.log(Number("123"));\nconsole.log(Number("abc"));\nconsole.log(Boolean(0), Boolean(""), Boolean(1));\n\n// 비교\nconsole.log("\\n--- 비교 ---");\nconsole.log("1 == 1:", 1 == 1);\nconsole.log("1 === \\"1\\":", 1 === "1");\nconsole.log("null == undefined:", null == undefined);\nconsole.log("null === undefined:", null === undefined);',
+          body: ''
+        },
+        {
+          id: 2,
+          label: '함수',
+          content: '<h3>함수 선언 방식</h3>' +
+            '<pre class="code">// 1. 함수 선언식 (호이스팅됨)\nfunction add(a, b) {\n  return a + b;\n}\n\n// 2. 함수 표현식 (호이스팅 안 됨)\nconst multiply = function(a, b) {\n  return a * b;\n};\n\n// 3. 화살표 함수 (ES6+, this 바인딩 없음)\nconst square = x => x * x;\nconst greet  = (name) => "안녕, " + name;\nconst noop   = () => {};</pre>' +
+            '<h3>매개변수</h3>' +
+            '<pre class="code">// 기본값 매개변수\nfunction hello(name = "세계") {\n  return `안녕하세요, ${name}!`;\n}\n\n// 나머지 매개변수 (rest)\nfunction sum(...nums) {\n  return nums.reduce((acc, n) => acc + n, 0);\n}\nsum(1, 2, 3, 4); // 10\n\n// 구조 분해 매개변수\nfunction display({ name, age }) {\n  console.log(name, age);\n}</pre>' +
+            '<h3>클로저 & 스코프</h3>' +
+            '<pre class="code">function makeCounter() {\n  let count = 0;           // 외부에서 접근 불가\n  return {\n    inc: () => ++count,\n    dec: () => --count,\n    get: () => count\n  };\n}\nconst counter = makeCounter();\ncounter.inc(); // 1\ncounter.inc(); // 2\ncounter.get(); // 2</pre>',
+          code: '// 함수 실습\n\n// 1. 기본 함수\nfunction add(a, b) { return a + b; }\nconsole.log("add(3, 4) =", add(3, 4));\n\n// 2. 화살표 함수\nconst square = x => x * x;\nconsole.log("square(5) =", square(5));\n\n// 3. 기본값 매개변수\nfunction greet(name = "세계") {\n  return "안녕하세요, " + name + "!";\n}\nconsole.log(greet());\nconsole.log(greet("홍길동"));\n\n// 4. 나머지 매개변수\nfunction sum(...nums) {\n  return nums.reduce((a, b) => a + b, 0);\n}\nconsole.log("sum(1..5) =", sum(1, 2, 3, 4, 5));\n\n// 5. 클로저\nfunction makeCounter() {\n  let count = 0;\n  return () => ++count;\n}\nconst next = makeCounter();\nconsole.log(next(), next(), next()); // 1 2 3',
+          body: ''
+        },
+        {
+          id: 3,
+          label: '배열과 객체',
+          content: '<h3>배열 (Array)</h3>' +
+            '<pre class="code">const arr = [1, 2, 3, 4, 5];\n\narr.push(6);         // 뒤 추가 → [1,2,3,4,5,6]\narr.pop();           // 뒤 제거 → [1,2,3,4,5]\narr.unshift(0);      // 앞 추가 → [0,1,2,3,4,5]\narr.shift();         // 앞 제거 → [1,2,3,4,5]\narr.splice(1, 2);    // 인덱스1부터 2개 제거\n\n// 고차 함수\narr.forEach(n => console.log(n));      // 순회\nconst doubled = arr.map(n => n * 2);   // 변환\nconst evens   = arr.filter(n => n % 2 === 0); // 필터\nconst total   = arr.reduce((a, b) => a + b, 0); // 누적\nconst found   = arr.find(n => n > 3);  // 검색\nconst idx     = arr.findIndex(n => n === 3); // 인덱스\nconst sorted  = [...arr].sort((a, b) => b - a); // 정렬(원본 변경!)</pre>' +
+            '<h3>객체 (Object)</h3>' +
+            '<pre class="code">const person = {\n  name: "김철수",\n  age: 30,\n  greet() { return `저는 ${this.name}입니다.`; }\n};\n\n// 접근\nperson.name;           // 점 표기법\nperson["age"];         // 괄호 표기법\n\n// 추가/수정/삭제\nperson.email = "k@test.com";\ndelete person.age;\n\n// 구조 분해\nconst { name, email } = person;\nconst { name: n, age: a = 0 } = person; // 별칭 & 기본값\n\n// 스프레드\nconst copy    = { ...person };\nconst merged  = { ...person, role: "admin" };</pre>',
+          code: '// 배열과 객체 실습\n\n// 배열 고차 함수\nconst numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\n\nconst evens   = numbers.filter(n => n % 2 === 0);\nconst doubled = evens.map(n => n * 2);\nconst total   = doubled.reduce((a, b) => a + b, 0);\n\nconsole.log("짝수:", evens);\nconsole.log("2배:", doubled);\nconsole.log("합계:", total);\n\n// 객체 배열 처리\nconst users = [\n  { name: "홍길동", score: 85 },\n  { name: "김철수", score: 92 },\n  { name: "이영희", score: 78 },\n];\n\nconst topUsers = users\n  .filter(u => u.score >= 80)\n  .sort((a, b) => b.score - a.score)\n  .map(u => u.name + " (" + u.score + "점)");\n\nconsole.log("\\n80점 이상 (정렬):");\ntopUsers.forEach(u => console.log(" -", u));\n\n// 구조 분해\nconst { name, score } = users[0];\nconsole.log("\\n첫 번째:", name, score + "점");',
+          body: ''
+        },
+        {
+          id: 4,
+          label: 'DOM 조작',
+          content: '<h3>요소 선택</h3>' +
+            '<pre class="code">// 단일 요소\ndocument.getElementById("myId");\ndocument.querySelector(".myClass");\ndocument.querySelector("ul li:first-child");\n\n// 복수 요소 (NodeList)\ndocument.querySelectorAll("li");\ndocument.getElementsByClassName("item");\ndocument.getElementsByTagName("p");</pre>' +
+            '<h3>내용 / 속성 변경</h3>' +
+            '<pre class="code">const el = document.querySelector("#target");\n\nel.textContent = "새 텍스트";        // 텍스트만\nel.innerHTML   = "&lt;b&gt;굵게&lt;/b&gt;";      // HTML 포함\n\nel.setAttribute("data-id", "123");\nel.getAttribute("href");\nel.removeAttribute("disabled");\n\nel.classList.add("active");\nel.classList.remove("hidden");\nel.classList.toggle("selected");\nel.classList.contains("active"); // true/false\n\nel.style.color   = "red";\nel.style.display = "none";</pre>' +
+            '<h3>요소 생성 / 추가 / 삭제</h3>' +
+            '<pre class="code">// 생성\nconst li = document.createElement("li");\nli.textContent = "새 항목";\n\n// 추가\nparent.appendChild(li);\nparent.insertBefore(li, referenceNode);\nel.insertAdjacentHTML("beforeend", "&lt;span&gt;추가&lt;/span&gt;");\n\n// 복제 / 삭제\nel.cloneNode(true);   // 자식까지 복제\nel.remove();\nparent.removeChild(child);</pre>',
+          code: '// DOM 조작 실습\n// 아래에 HTML 요소들이 준비되어 있습니다.\n\n// 1. 텍스트 변경\ndocument.getElementById("title").textContent = "DOM 조작 완료!";\n\n// 2. 스타일/클래스\nconst box = document.getElementById("box");\nbox.style.backgroundColor = "#4a90d9";\nbox.style.color = "white";\nbox.classList.add("active");\n\n// 3. 리스트 동적 생성\nconst fruits = ["🍎 사과", "🍌 바나나", "🍊 오렌지", "🍇 포도"];\nconst ul = document.getElementById("list");\nfruits.forEach((f, i) => {\n  const li = document.createElement("li");\n  li.textContent = f;\n  li.style.cursor = "pointer";\n  li.dataset.index = i;\n  li.addEventListener("click", function() {\n    this.style.textDecoration = "line-through";\n    this.style.color = "#999";\n  });\n  ul.appendChild(li);\n});\n\n// 4. querySelector\nconst items = document.querySelectorAll("li");\nconsole.log("li 개수:", items.length);',
+          body: '<div style="padding:8px;">' +
+            '<h2 id="title" style="font-size:15px;margin-bottom:8px;">제목 변경 전</h2>' +
+            '<div id="box" style="padding:10px;background:#eee;margin-bottom:8px;">박스 스타일 변경 전</div>' +
+            '<ul id="list" style="padding-left:20px;"></ul>' +
+            '</div>'
+        },
+        {
+          id: 5,
+          label: '이벤트',
+          content: '<h3>이벤트 등록</h3>' +
+            '<pre class="code">const btn = document.querySelector("#btn");\n\n// addEventListener (권장)\nbtn.addEventListener("click", function(e) {\n  console.log("클릭됨", e.target);\n  e.preventDefault();    // 기본 동작 막기\n  e.stopPropagation();   // 버블링 중단\n});\n\n// 한 번만 실행\nbtn.addEventListener("click", handler, { once: true });\n\n// 이벤트 제거\nbtn.removeEventListener("click", handler);</pre>' +
+            '<h3>자주 쓰는 이벤트</h3>' +
+            '<table class="ref">' +
+            '<tr><th>분류</th><th>이벤트</th></tr>' +
+            '<tr><td>마우스</td><td>click, dblclick, mouseenter, mouseleave, mousemove</td></tr>' +
+            '<tr><td>키보드</td><td>keydown, keyup, keypress</td></tr>' +
+            '<tr><td>폼</td><td>input, change, submit, focus, blur, reset</td></tr>' +
+            '<tr><td>문서</td><td>DOMContentLoaded, load, resize, scroll</td></tr>' +
+            '</table>' +
+            '<h3>이벤트 위임 (Event Delegation)</h3>' +
+            '<pre class="code">// 동적으로 추가된 요소에도 이벤트 처리 가능\ndocument.getElementById("list").addEventListener("click", e => {\n  if (e.target.matches("li")) {\n    e.target.classList.toggle("selected");\n    console.log("선택:", e.target.textContent);\n  }\n});\n\n// e.target  : 실제 클릭된 요소\n// e.currentTarget : 리스너가 달린 요소</pre>' +
+            '<div class="tip-box">💡 <b>이벤트 버블링:</b> 클릭 이벤트는 target → 부모 → ... → document 순서로 전파됩니다. 이를 이용한 것이 이벤트 위임입니다.</div>',
+          code: '// 이벤트 실습\n\n// 1. 클릭 카운터\nlet count = 0;\ndocument.getElementById("counter-btn").addEventListener("click", function() {\n  count++;\n  document.getElementById("count-display").textContent = "클릭: " + count + "번";\n  if (count % 5 === 0) this.style.backgroundColor = "#ffcc00";\n  else this.style.backgroundColor = "";\n});\n\n// 2. 키보드 이벤트\ndocument.getElementById("input").addEventListener("keyup", function(e) {\n  document.getElementById("key-display").textContent =\n    "입력: \\"" + this.value + "\\" (마지막 키: " + e.key + ")";\n});\n\n// 3. 이벤트 위임\ndocument.getElementById("ev-list").addEventListener("click", e => {\n  if (e.target.tagName === "LI") {\n    e.target.classList.toggle("done");\n  }\n});\n\n// 동적 li 추가\n["할 일 A", "할 일 B", "할 일 C"].forEach(t => {\n  const li = document.createElement("li");\n  li.textContent = t + " (클릭 시 완료)";\n  li.style.cursor = "pointer";\n  document.getElementById("ev-list").appendChild(li);\n});',
+          body: '<style>.done{text-decoration:line-through;color:#999;}</style>' +
+            '<div style="padding:8px;">' +
+            '<button id="counter-btn" style="padding:4px 12px;cursor:pointer;">클릭하세요!</button> ' +
+            '<span id="count-display" style="margin-left:8px;"></span>' +
+            '<br><br>' +
+            '<input id="input" type="text" placeholder="타이핑해보세요..." style="padding:3px 6px;width:200px;" />' +
+            '<div id="key-display" style="margin-top:4px;color:#555;font-size:11px;"></div>' +
+            '<br>' +
+            '<ul id="ev-list" style="padding-left:20px;"></ul>' +
+            '</div>'
+        }
+      ];
+
+      let currentId = 1;
+
+      function loadTopic(id) {
+        const t = TOPICS.find(x => x.id === id);
+        if (!t) return;
+        currentId = id;
+        document.getElementById('explain-body').innerHTML = t.content;
+        document.getElementById('code-editor').value = t.code;
+      }
+
+      function buildSrcdoc(code) {
+        const t = TOPICS.find(x => x.id === currentId);
+        return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+          '<style>body{font-family:Arial,sans-serif;font-size:12px;margin:8px;}' +
+          '.log{border-bottom:1px solid #eee;padding:2px 4px;font-family:monospace;font-size:11px;color:#333;}' +
+          '.err{padding:3px 6px;background:#fee;color:red;font-family:monospace;font-size:11px;border-left:3px solid red;margin:2px 0;}</style>' +
+          '</head><body>' + (t.body || '') +
+          '<script>(function(){' +
+          'var _l=console.log;' +
+          'console.log=function(){_l.apply(console,arguments);' +
+          'var d=document.createElement("div");d.className="log";' +
+          'd.textContent=Array.from(arguments).map(function(a){return typeof a==="object"?JSON.stringify(a):String(a);}).join(" ");' +
+          'document.body.appendChild(d);};' +
+          'window.onerror=function(m,s,l){var d=document.createElement("div");d.className="err";d.textContent="오류: "+m+" (line "+l+")";document.body.appendChild(d);return true;};' +
+          '})();<\/script>' +
+          '<script>try{' + code + '}catch(e){var d=document.createElement("div");d.className="err";d.textContent="런타임 오류: "+e.message;document.body.appendChild(d);}<\/script>' +
+          '</body></html>';
+      }
+
+      // Init
+      loadTopic(1);
+
+      // Sidebar
+      document.querySelectorAll('.topic-item').forEach(li => {
+        li.addEventListener('click', () => {
+          document.querySelectorAll('.topic-item').forEach(x => x.classList.remove('active'));
+          li.classList.add('active');
+          loadTopic(parseInt(li.dataset.id));
+        });
+      });
+
+      // Tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab + '-pane').classList.add('active');
+        });
+      });
+
+      // Run / Reset / Clear
+      document.getElementById('btn-run').addEventListener('click', () => {
+        document.getElementById('output-frame').srcdoc =
+          buildSrcdoc(document.getElementById('code-editor').value);
+      });
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        document.getElementById('code-editor').value =
+          TOPICS.find(x => x.id === currentId).code;
+      });
+      document.getElementById('btn-clear').addEventListener('click', () => {
+        document.getElementById('output-frame').srcdoc = '';
+      });
+
+      // Tab key
+      document.getElementById('code-editor').addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const ta = e.target, s = ta.selectionStart;
+          ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(ta.selectionEnd);
+          ta.selectionStart = ta.selectionEnd = s + 2;
+        }
+      });
+    </script>
+  </body>
+</html>

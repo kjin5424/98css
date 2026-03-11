@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>jqGrid</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="assets/styles/learn.css" />
+  </head>
+  <body class="is-page">
+    <div id="app">
+
+      <div class="sidebar">
+        <div class="sidebar-title">📊 jqGrid</div>
+        <ol class="topic-list">
+          <li class="topic-item active" data-id="1">기본 설정</li>
+          <li class="topic-item" data-id="2">컬럼 정의</li>
+          <li class="topic-item" data-id="3">이벤트 처리</li>
+          <li class="topic-item" data-id="4">행 CRUD</li>
+        </ol>
+      </div>
+
+      <div class="main-area">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="explain">📖 설명</button>
+          <button class="tab-btn" data-tab="practice">⌨️ 실습</button>
+        </div>
+        <div class="tab-pane active" id="explain-pane">
+          <div class="content-body" id="explain-body"></div>
+        </div>
+        <div class="tab-pane" id="practice-pane">
+          <div class="practice-area">
+            <div class="editor-label">📝 코드 에디터 (free-jqGrid 사용 가능)</div>
+            <textarea class="code-editor" id="code-editor" spellcheck="false"></textarea>
+            <div class="btn-row">
+              <button id="btn-run">▶ 실행</button>
+              <button id="btn-reset">↺ 초기화</button>
+              <button id="btn-clear">🗑 지우기</button>
+              <span class="hint-text">jQuery + free-jqGrid 4.15가 자동 로드됩니다</span>
+            </div>
+            <div class="output-wrap">
+              <div class="output-label">실행 결과</div>
+              <iframe class="output-frame" id="output-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <script>
+      const COMMON_HEAD =
+        '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css" />' +
+        '<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>' +
+        '<script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"><\/script>' +
+        '<style>body{font-family:Arial,sans-serif;font-size:12px;margin:6px;}' +
+        '.log{border-bottom:1px solid #eee;padding:2px 4px;font-family:monospace;font-size:11px;}' +
+        '.err{padding:3px 6px;background:#fee;color:red;font-family:monospace;font-size:11px;border-left:3px solid red;margin:2px 0;}' +
+        'button{padding:3px 8px;margin:2px;cursor:pointer;font-size:11px;}' +
+        '#info{margin-top:5px;padding:4px 8px;background:#f0f8ff;border:1px solid #99c;font-size:11px;min-height:20px;}</style>';
+
+      const SAMPLE_DATA = [
+        { id:1, name:"홍길동", dept:"개발팀", salary:4500000, status:"재직" },
+        { id:2, name:"김철수", dept:"기획팀", salary:3800000, status:"재직" },
+        { id:3, name:"이영희", dept:"디자인팀", salary:4100000, status:"재직" },
+        { id:4, name:"박민준", dept:"개발팀", salary:5200000, status:"재직" },
+        { id:5, name:"최지원", dept:"영업팀", salary:3600000, status:"휴직" },
+        { id:6, name:"정수현", dept:"개발팀", salary:4800000, status:"재직" },
+        { id:7, name:"강태양", dept:"기획팀", salary:4200000, status:"재직" },
+        { id:8, name:"윤미래", dept:"디자인팀", salary:3900000, status:"재직" }
+      ];
+
+      const TOPICS = [
+        {
+          id: 1,
+          label: '기본 설정',
+          content: '<h3>jqGrid란?</h3>' +
+            '<p>jQuery 기반의 데이터 그리드 플러그인입니다. 정렬, 페이징, 검색, 인라인 편집, CRUD 기능을 제공합니다.</p>' +
+            '<h3>CDN 로드 (free-jqGrid)</h3>' +
+            '<pre class="code">&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css" /&gt;\n&lt;script src="https://code.jquery.com/jquery-3.7.1.min.js"&gt;&lt;/script&gt;\n&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"&gt;&lt;/script&gt;</pre>' +
+            '<h3>기본 초기화</h3>' +
+            '<pre class="code">// HTML: &lt;table id="grid"&gt;&lt;/table&gt;&lt;div id="pager"&gt;&lt;/div&gt;\n\n$("#grid").jqGrid({\n  url:      "/api/data",    // 데이터 URL\n  datatype: "json",         // 데이터 타입: json, xml, local\n  mtype:    "GET",          // HTTP 메서드\n  colModel: [ ... ],        // 컬럼 정의 (필수)\n  rowNum:   10,             // 페이지당 행 수\n  rowList:  [10, 20, 50],  // 행 수 선택 목록\n  pager:    "#pager",       // 페이저 영역\n  sortname: "id",           // 기본 정렬 컬럼\n  sortorder: "asc",         // 정렬 방향\n  viewrecords: true,        // 전체 건수 표시\n  caption:  "직원 목록",     // 그리드 제목\n  width:    "auto",\n  height:   300,\n  multiselect: true         // 다중 선택\n});</pre>' +
+            '<h3>로컬 데이터 사용</h3>' +
+            '<pre class="code">$("#grid").jqGrid({\n  datatype: "local",\n  data: [\n    { id:1, name:"홍길동", dept:"개발팀" },\n    { id:2, name:"김철수", dept:"기획팀" }\n  ],\n  colModel: [\n    { name:"id",   label:"번호", width:50 },\n    { name:"name", label:"이름", width:100 },\n    { name:"dept", label:"부서", width:100 }\n  ]\n});</pre>',
+          code: '$(function() {\n  const data = ' + JSON.stringify(SAMPLE_DATA) + ';\n\n  $("#grid").jqGrid({\n    datatype: "local",\n    data: data,\n    colModel: [\n      { name:"id",     label:"번호", width:50,  align:"center", key:true },\n      { name:"name",   label:"이름", width:90  },\n      { name:"dept",   label:"부서", width:100 },\n      { name:"salary", label:"급여", width:100, align:"right",\n        formatter: function(val) { return val.toLocaleString() + "원"; }\n      },\n      { name:"status", label:"상태", width:70,  align:"center",\n        formatter: function(val) {\n          const c = val === "재직" ? "green" : "orange";\n          return "<span style=\'color:" + c + "\'>" + val + "</span>";\n        }\n      }\n    ],\n    rowNum: 5,\n    rowList: [5, 10],\n    pager: "#pager",\n    sortname: "id",\n    viewrecords: true,\n    caption: "직원 목록",\n    width: 490,\n    height: 160\n  });\n});',
+          body: '<div><table id="grid"></table><div id="pager"></div><div id="info"></div></div>'
+        },
+        {
+          id: 2,
+          label: '컬럼 정의',
+          content: '<h3>colModel 주요 옵션</h3>' +
+            '<table class="ref">' +
+            '<tr><th>옵션</th><th>설명</th><th>예시</th></tr>' +
+            '<tr><td>name</td><td>데이터 필드명 (필수)</td><td>"userId"</td></tr>' +
+            '<tr><td>label</td><td>헤더 표시명</td><td>"사용자 ID"</td></tr>' +
+            '<tr><td>width</td><td>컬럼 너비(px)</td><td>100</td></tr>' +
+            '<tr><td>align</td><td>정렬</td><td>"left","center","right"</td></tr>' +
+            '<tr><td>sortable</td><td>정렬 허용</td><td>true/false</td></tr>' +
+            '<tr><td>hidden</td><td>숨김 여부</td><td>true/false</td></tr>' +
+            '<tr><td>key</td><td>기본 키 여부</td><td>true</td></tr>' +
+            '<tr><td>editable</td><td>인라인 편집</td><td>true</td></tr>' +
+            '<tr><td>edittype</td><td>편집 입력 타입</td><td>"text","select","checkbox"</td></tr>' +
+            '</table>' +
+            '<h3>formatter (값 포맷)</h3>' +
+            '<pre class="code">// 내장 formatter\n{ name:"price",  formatter:"currency",\n  formatoptions: { prefix: "₩", thousandsSeparator:"," } }\n{ name:"date",   formatter:"date",\n  formatoptions: { srcformat:"Y-m-d", newformat:"Y년 m월 d일" } }\n{ name:"active", formatter:"checkbox" }\n{ name:"link",   formatter:"link",\n  formatoptions: { baseLinkUrl:"/detail", target:"_blank" } }\n\n// 커스텀 formatter\n{ name:"status",\n  formatter: function(cellval, opts, rowObject) {\n    const color = cellval === "재직" ? "green" : "red";\n    return `&lt;span style="color:${color}"&gt;${cellval}&lt;/span&gt;`;\n  },\n  unformat: function(cellval, opts) {\n    return $(cellval).text(); // 편집 시 원래 값 추출\n  }\n}</pre>' +
+            '<h3>edittype 옵션</h3>' +
+            '<pre class="code">// select (selectbox)\n{ name:"dept", editable:true, edittype:"select",\n  editoptions: { value: "개발팀:개발팀;기획팀:기획팀;영업팀:영업팀" } }\n\n// checkbox\n{ name:"active", editable:true, edittype:"checkbox",\n  editoptions: { value: "Y:N" } }\n\n// textarea\n{ name:"memo", editable:true, edittype:"textarea",\n  editoptions: { rows:3, cols:30 } }</pre>',
+          code: '$(function() {\n  const data = ' + JSON.stringify(SAMPLE_DATA) + ';\n\n  $("#grid").jqGrid({\n    datatype: "local",\n    data: data,\n    colModel: [\n      { name:"id",     label:"번호", width:45,  align:"center", key:true, sorttype:"int" },\n      { name:"name",   label:"이름", width:80,  sortable:true },\n      { name:"dept",   label:"부서", width:95,  sortable:true,\n        editable:true, edittype:"select",\n        editoptions:{ value:"개발팀:개발팀;기획팀:기획팀;디자인팀:디자인팀;영업팀:영업팀" }\n      },\n      { name:"salary", label:"급여", width:100, align:"right", sorttype:"int",\n        formatter:"currency",\n        formatoptions:{ thousandsSeparator:",", suffix:"원", defaultValue:"0" }\n      },\n      { name:"status", label:"상태", width:65,  align:"center",\n        formatter: function(val) {\n          return val === "재직"\n            ? "<span style=\'background:#e8f5e9;color:green;padding:1px 5px;border-radius:3px;\'>재직</span>"\n            : "<span style=\'background:#fff3e0;color:orange;padding:1px 5px;border-radius:3px;\'>휴직</span>";\n        }\n      }\n    ],\n    rowNum: 8,\n    pager: "#pager",\n    sortname: "id",\n    viewrecords: true,\n    caption: "직원 목록 (컬럼 커스터마이징)",\n    width: 490,\n    height: 200\n  });\n});',
+          body: '<div><table id="grid"></table><div id="pager"></div></div>'
+        },
+        {
+          id: 3,
+          label: '이벤트 처리',
+          content: '<h3>주요 이벤트 콜백</h3>' +
+            '<pre class="code">$("#grid").jqGrid({\n  // ...\n  onSelectRow: function(rowId) {\n    const data = $(this).jqGrid("getRowData", rowId);\n    console.log("선택된 행:", data);\n  },\n  onSelectAll: function(rowIds, status) {\n    console.log(status ? "전체 선택" : "전체 해제", rowIds);\n  },\n  onCellSelect: function(rowId, colIdx, cellContent, e) {\n    console.log("셀 클릭:", rowId, colIdx, cellContent);\n  },\n  ondblClickRow: function(rowId) {\n    $(this).jqGrid("editRow", rowId); // 인라인 편집 시작\n  },\n  onSortCol: function(colName, colIndex, sortOrder) {\n    console.log("정렬:", colName, sortOrder);\n  },\n  onPaging: function(action) {\n    // action: "first","prev","next","last","records","user"\n    console.log("페이지:", action);\n  },\n  loadComplete: function(data) {\n    console.log("로드 완료, 총:", data.records);\n  },\n  loadError: function(xhr, status, error) {\n    console.error("로드 오류:", error);\n  }\n});</pre>',
+          code: '$(function() {\n  const data = ' + JSON.stringify(SAMPLE_DATA) + ';\n\n  $("#grid").jqGrid({\n    datatype: "local",\n    data: data,\n    colModel: [\n      { name:"id",     label:"번호", width:50,  align:"center", key:true },\n      { name:"name",   label:"이름", width:90 },\n      { name:"dept",   label:"부서", width:95 },\n      { name:"salary", label:"급여", width:100, align:"right",\n        formatter: function(v){ return v.toLocaleString() + "원"; }\n      },\n      { name:"status", label:"상태", width:65,  align:"center" }\n    ],\n    rowNum: 5,\n    pager: "#pager",\n    sortname: "id",\n    viewrecords: true,\n    caption: "직원 목록 (이벤트 테스트)",\n    multiselect: true,\n    width: 490,\n    height: 160,\n    onSelectRow: function(rowId) {\n      const row = $(this).jqGrid("getRowData", rowId);\n      log("행 선택: " + row.name + " / " + row.dept + " / " + row.salary.toLocaleString() + "원");\n    },\n    ondblClickRow: function(rowId) {\n      log("더블클릭: ID=" + rowId);\n    },\n    onSortCol: function(col, idx, order) {\n      log("정렬: " + col + " " + order);\n    },\n    loadComplete: function() {\n      log("loadComplete: 데이터 로드 완료");\n    }\n  });\n\n  function log(msg) {\n    const d = document.createElement("div");\n    d.className = "log";\n    d.textContent = "[" + new Date().toLocaleTimeString() + "] " + msg;\n    document.getElementById("event-log").prepend(d);\n  }\n});',
+          body: '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+            '<div><table id="grid"></table><div id="pager"></div></div>' +
+            '<div style="flex:1;min-width:150px;">' +
+            '<b style="font-size:11px;">이벤트 로그:</b>' +
+            '<div id="event-log" style="border:1px solid #ccc;height:200px;overflow-y:auto;background:#fff;"></div>' +
+            '</div></div>'
+        },
+        {
+          id: 4,
+          label: '행 CRUD',
+          content: '<h3>데이터 조회</h3>' +
+            '<pre class="code">const g = $("#grid");\n\ng.jqGrid("getRowData", rowId);      // 특정 행 데이터\ng.jqGrid("getDataIDs");             // 모든 행 ID 배열\ng.jqGrid("getGridParam", "selrow"); // 선택된 행 ID\ng.jqGrid("getGridParam", "selarrrow"); // 다중 선택 ID 배열\ng.jqGrid("getGridParam", "data");   // 전체 로컬 데이터</pre>' +
+            '<h3>행 추가 / 수정 / 삭제</h3>' +
+            '<pre class="code">// 행 추가 (로컬 데이터)\ng.jqGrid("addRowData", rowId, rowData, "last");\n// 위치: "first","last","before rowId","after rowId"\n\n// 행 수정\ng.jqGrid("setRowData", rowId, { name:"새이름", age:30 });\n\n// 행 삭제\ng.jqGrid("delRowData", rowId);\n\n// 전체 데이터 교체\ng.jqGrid("clearGridData");\ng.jqGrid("setGridParam", { data: newDataArray });\ng.trigger("reloadGrid");\n\n// 인라인 편집\ng.jqGrid("editRow", rowId);   // 편집 시작\ng.jqGrid("saveRow", rowId);   // 저장\ng.jqGrid("restoreRow", rowId); // 취소</pre>' +
+            '<h3>폼 편집 (editGridRow)</h3>' +
+            '<pre class="code">// 신규 입력 폼\ng.jqGrid("editGridRow", "new", {\n  url:     "/api/users",\n  mtype:   "POST",\n  closeAfterAdd: true,\n  afterSubmit: function(res, data) {\n    return [true, "", res.responseJSON.id];\n  }\n});\n\n// 수정 폼\ng.jqGrid("editGridRow", rowId, {\n  url:      "/api/users/" + rowId,\n  mtype:    "PUT",\n  closeAfterEdit: true\n});\n\n// 삭제 폼\ng.jqGrid("delGridRow", rowId, {\n  url:   "/api/users/" + rowId,\n  mtype: "DELETE"\n});</pre>',
+          code: '$(function() {\n  const data = ' + JSON.stringify(SAMPLE_DATA.slice(0, 5)) + ';\n  let nextId = data.length + 1;\n\n  $("#grid").jqGrid({\n    datatype: "local",\n    data: data,\n    colModel: [\n      { name:"id",     label:"번호", width:45,  align:"center", key:true },\n      { name:"name",   label:"이름", width:85 },\n      { name:"dept",   label:"부서", width:95 },\n      { name:"salary", label:"급여", width:100, align:"right",\n        formatter: function(v){ return v.toLocaleString() + "원"; }\n      },\n      { name:"status", label:"상태", width:65, align:"center" }\n    ],\n    rowNum: 10,\n    pager: "#pager",\n    sortname: "id",\n    viewrecords: true,\n    caption: "직원 목록 (CRUD)",\n    width: 490,\n    height: 180,\n    onSelectRow: function(rowId) {\n      const row = $(this).jqGrid("getRowData", rowId);\n      $("#info").text("선택: " + row.name + " (" + row.dept + ")");\n    }\n  });\n\n  // 행 추가\n  $("#btn-add").click(function() {\n    const newRow = { id:nextId++, name:"신입 "+nextId, dept:"개발팀", salary:3200000, status:"재직" };\n    $("#grid").jqGrid("addRowData", newRow.id, newRow, "last");\n    $("#info").text("추가됨: " + newRow.name);\n  });\n\n  // 선택 행 수정\n  $("#btn-edit").click(function() {\n    const rowId = $("#grid").jqGrid("getGridParam", "selrow");\n    if (!rowId) { $("#info").text("수정할 행을 선택하세요."); return; }\n    const row = $("#grid").jqGrid("getRowData", rowId);\n    const newName = prompt("새 이름:", row.name);\n    if (newName) {\n      $("#grid").jqGrid("setRowData", rowId, { name: newName });\n      $("#info").text("수정됨: " + newName);\n    }\n  });\n\n  // 선택 행 삭제\n  $("#btn-del").click(function() {\n    const rowId = $("#grid").jqGrid("getGridParam", "selrow");\n    if (!rowId) { $("#info").text("삭제할 행을 선택하세요."); return; }\n    const row = $("#grid").jqGrid("getRowData", rowId);\n    $("#grid").jqGrid("delRowData", rowId);\n    $("#info").text("삭제됨: " + row.name);\n  });\n\n  // 전체 건수\n  $("#btn-count").click(function() {\n    const ids = $("#grid").jqGrid("getDataIDs");\n    $("#info").text("전체 행 수: " + ids.length + "개");\n  });\n});',
+          body: '<div>' +
+            '<div style="margin-bottom:6px;">' +
+            '<button id="btn-add">➕ 행 추가</button>' +
+            '<button id="btn-edit">✏️ 수정</button>' +
+            '<button id="btn-del">🗑 삭제</button>' +
+            '<button id="btn-count">📊 건수</button>' +
+            '</div>' +
+            '<table id="grid"></table><div id="pager"></div>' +
+            '<div id="info" style="margin-top:5px;padding:4px 8px;background:#f0f8ff;border:1px solid #99c;font-size:11px;"></div>' +
+            '</div>'
+        }
+      ];
+
+      let currentId = 1;
+
+      function loadTopic(id) {
+        const t = TOPICS.find(x => x.id === id);
+        if (!t) return;
+        currentId = id;
+        document.getElementById('explain-body').innerHTML = t.content;
+        document.getElementById('code-editor').value = t.code;
+      }
+
+      function buildSrcdoc(code) {
+        const t = TOPICS.find(x => x.id === currentId);
+        return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+          COMMON_HEAD +
+          '</head><body>' + (t.body || '') +
+          '<script>(function(){' +
+          'var _l=console.log;' +
+          'console.log=function(){_l.apply(console,arguments);' +
+          'var d=document.createElement("div");d.className="log";' +
+          'd.textContent=Array.from(arguments).map(function(a){return typeof a==="object"?JSON.stringify(a):String(a);}).join(" ");' +
+          'document.body.appendChild(d);};' +
+          'window.onerror=function(m,s,l){var d=document.createElement("div");d.className="err";d.textContent="오류: "+m+" (line "+l+")";document.body.appendChild(d);return true;};' +
+          '})();<\/script>' +
+          '<script>try{' + code + '}catch(e){var d=document.createElement("div");d.className="err";d.textContent="런타임 오류: "+e.message;document.body.appendChild(d);}<\/script>' +
+          '</body></html>';
+      }
+
+      loadTopic(1);
+
+      document.querySelectorAll('.topic-item').forEach(li => {
+        li.addEventListener('click', () => {
+          document.querySelectorAll('.topic-item').forEach(x => x.classList.remove('active'));
+          li.classList.add('active');
+          loadTopic(parseInt(li.dataset.id));
+        });
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab + '-pane').classList.add('active');
+        });
+      });
+
+      document.getElementById('btn-run').addEventListener('click', () => {
+        document.getElementById('output-frame').srcdoc =
+          buildSrcdoc(document.getElementById('code-editor').value);
+      });
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        document.getElementById('code-editor').value =
+          TOPICS.find(x => x.id === currentId).code;
+      });
+      document.getElementById('btn-clear').addEventListener('click', () => {
+        document.getElementById('output-frame').srcdoc = '';
+      });
+
+      document.getElementById('code-editor').addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const ta = e.target, s = ta.selectionStart;
+          ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(ta.selectionEnd);
+          ta.selectionStart = ta.selectionEnd = s + 2;
+        }
+      });
+    </script>
+  </body>
+</html>
